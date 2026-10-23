@@ -125,8 +125,8 @@ curl -s https://your-site/play.html | grep -c 'index.json'   # 期望 >= 1
 
 | 入口 | 用途 |
 | --- | --- |
-| `https://cards.vicapt.top/` | 人看的站点（含复制按钮） |
-| `https://raw.githubusercontent.com/Vicapt/marketproduct/main/index.html` | **发给 AI 的入口**（部分平台的工具打不开自定义域名，但能开 raw 域名） |
+| `https://cards.vicapt.top/` | 人看的站点（含复制按钮）；也能直接发给能打开自定义域名的 AI |
+| `https://raw.githubusercontent.com/Vicapt/marketproduct/main/index.html` | **发给 AI 的备用入口**（部分平台的工具打不开自定义域名，但能开 raw 域名） |
 
 每道题都有三种等价形式、两个主机，内容完全一致：
 
@@ -137,6 +137,10 @@ curl -s https://your-site/play.html | grep -c 'index.json'   # 期望 >= 1
 {raw}/draw/qNN.txt                                raw 镜像（纯文本）
 {raw}/draw/qNN.json                               raw 镜像（JSON）
 ```
+
+> 平台的联网能力**取决于模式，不只取决于平台**：实测 DeepSeek 普通模式下完全无法联网，
+> 开启「深度思考」后即可正常访问本站（自定义域名和 raw 域名都能打开）。
+> 测试前先确认模式，并把「平台 × 模式」一起记进结果表。
 
 若某平台的工具**完全无法导航到新 URL**，初始页内嵌了完整题库（`编号｜题目`），
 AI 可走降级路径，并被要求如实标注「降级路径：未能打开结果页」——题目仍是真读到的正文。

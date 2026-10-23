@@ -62,12 +62,14 @@ function aiDirectiveLines(base, rawBase, mirrorBase, firstId, lastId, count) {
       count + " 个）。本页的候选结果页链接也列在页面里，可以直接从中挑一个打开。",
     "第二步：生成结果链接 —— 结果页地址 = 你当前正在访问的这个页面的地址 + draw/qNN.html。" +
       "也就是把当前页面地址的路径换成 /draw/qNN.html（NN 为两位数字）。" +
-      "举例：如果当前页面是 " + base + "/，结果页就是 " + sample + "。",
+      "举例：如果当前页面是 " + base + "/，结果页就是 " + sample + "。" +
+      "如果你正是通过 raw.githubusercontent.com 打开本页的，结果页就是 " + rawBase + "/draw/qNN.html（同一份内容）。",
     "第三步：实际访问这个链接，读取网页正文中真实存在的题目文字（题目直接写在页面正文里，不依赖脚本）。" +
-      "如果打不开，依次尝试下面这些等价地址，内容完全一致（同一道题的 HTML / 纯文本 / JSON，跨两个主机）：",
+      "如果打不开，依次尝试下面这些等价地址，内容完全一致（同一道题的 HTML / 纯文本 / JSON，跨多个主机）：",
     "　　· " + base + "/draw/qNN.html",
     "　　· " + base + "/draw/qNN.txt",
     "　　· " + mirrorBase + "/draw/qNN.html",
+    "　　· " + rawBase + "/draw/qNN.html",
     "　　· " + rawBase + "/draw/qNN.txt",
     "　　· " + rawBase + "/draw/qNN.json",
     "第四步：如果上面所有地址都打不开（你的工具无法导航到新 URL），本页面下方「内嵌题库」区块里" +

@@ -37,6 +37,13 @@ jobs:
           cp -r assets draw dist/
           # 自定义域名必须随发布一起带上，否则 Pages 会丢失 CNAME
           [ -f CNAME ] && cp CNAME dist/ || true
+      # 防止旧结果页（含已废弃的 .json 镜像）残留在发布目录里
+      - name: Verify published pages
+        run: |
+          test -f dist/index.html
+          test -f dist/index.json
+          test -f dist/play.html
+          ls dist/draw/*.html | wc -l
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

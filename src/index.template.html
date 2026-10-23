@@ -30,8 +30,7 @@
       <p>候选结果页链接（只有地址，不含题目内容，请自行挑一个打开）：</p>
 {{AI_LINK_LIST_HTML}}
       <p>候选结果页地址一览：{{AI_LINK_LIST_TEXT}}</p>
-      <p>内嵌题库（仅当你的工具无法导航到新 URL 时使用；每行格式：编号｜题目）：</p>
-      <pre class="ai-bank">{{AI_BANK_HTML}}</pre>
+{{AI_BANK_TABLE_HTML}}
     </div>
 
     <main class="wrap">
@@ -52,7 +51,6 @@
         </ol>
 
         <button class="btn-primary" id="copy-link" type="button">复制扭蛋链接</button>
-        <button class="btn-ghost" id="copy-raw" type="button">复制 AI 入口链接（raw 镜像）</button>
         <button class="btn-ghost" id="copy-prompt" type="button">复制给 AI 的说明（可选）</button>
         <p class="note" id="status">本页面地址：{{SITE_URL}}</p>
 
@@ -78,7 +76,6 @@
     <script>
       (function () {
         var BAKED_URL = "{{SITE_URL}}";
-        var RAW_URL = "{{RAW_URL}}";
         var PROMPT_TEXT = {{PROMPT_JSON}};
         var status = document.getElementById("status");
         var timer = null;
@@ -134,13 +131,6 @@
           .addEventListener("click", function () {
             var text = PROMPT_TEXT.split(BAKED_URL).join(SITE_URL);
             copy(text, "已复制说明，请粘贴给 AI。");
-          });
-
-        // AI 入口（raw 镜像）：部分平台的网页工具打不开自定义域名，但能开 raw 域名
-        document
-          .getElementById("copy-raw")
-          .addEventListener("click", function () {
-            copy(RAW_URL, "已复制 AI 入口：" + RAW_URL);
           });
 
         status.textContent = "本页面地址：" + SITE_URL;

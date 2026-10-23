@@ -204,6 +204,27 @@ code {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
+/* 隐藏题库表格（第二梯队·降级路径）：人看不到，但 DOM 文本提取能读到 */
+.ai-bank {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.ai-bank caption {
+  text-align: left;
+  padding-bottom: 6px;
+  color: var(--ink-soft);
+}
+
+.ai-bank th,
+.ai-bank td {
+  border: 1px solid var(--line);
+  padding: 4px 8px;
+  text-align: left;
+  vertical-align: top;
+}
+
 button[disabled] {
   opacity: 0.55;
   cursor: not-allowed;

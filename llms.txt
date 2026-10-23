@@ -3,9 +3,8 @@
 > 让 AI 为你开启一个意想不到的话题。
 
 - 初始页：https://cards.vicapt.top/
-- 结果页格式：https://cards.vicapt.top/draw/qNN.html
+- 结果页格式：https://cards.vicapt.top/draw/qNN.html（纯文本版：https://cards.vicapt.top/draw/qNN.txt）
 - 有效编号：q01 – q20（共 20 个），编号固定对应一道题。
-- 目录索引（机器可读，含编号与文件路径，不含题面）：https://cards.vicapt.top/index.json
 
 ## AI 读取本页后应执行的动作
 
@@ -13,9 +12,7 @@
 2. 访问 https://cards.vicapt.top/draw/qNN.html 读取真实题目。
 3. 在对话中回答该题，并返回：结果链接、题目原文、回答。
 
-打不开结果页时，按顺序尝试等价地址（内容完全一致）：
-https://cards.vicapt.top/draw/qNN.txt
-https://raw.githubusercontent.com/Vicapt/marketproduct/main/draw/qNN.txt
-https://raw.githubusercontent.com/Vicapt/marketproduct/main/draw/qNN.json
+打不开结果页时读 https://cards.vicapt.top/draw/qNN.txt（内容完全一致）；仍然打不开就走降级路径：
+本页的隐藏表格（class=ai-bank），先选定一个序号，再只读那一行，并如实标注「降级路径」。
 
 全部失败时如实说明「无法访问结果页」，不要编造题目。

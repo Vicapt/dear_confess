@@ -52,6 +52,21 @@ LAYERS.forEach(([label, needle]) => {
   }
 });
 
+// ai.txt 里必须有可按行取题的隐藏题库（纯文本下没有 DOM 表格）
+{
+  const aiTxt = fs.readFileSync(path.join(ROOT, "ai.txt"), "utf8");
+  const rows = aiTxt.match(/^第 \d+ 行｜q\d\d｜.+$/gm) || [];
+  if (rows.length !== list.length) {
+    errors.push(`ai.txt 的隐藏题库行数为 ${rows.length}，应为 ${list.length}`);
+  }
+  list.forEach((q, i) => {
+    const expected = `第 ${i + 1} 行｜${q.id}｜${q.text}`;
+    if (!aiTxt.includes(expected)) {
+      errors.push(`ai.txt 的隐藏题库缺少「${q.id}」这一行`);
+    }
+  });
+}
+
 // index.json：机器可读的目录索引
 const indexJsonPath = path.join(ROOT, "index.json");
 if (!fs.existsSync(indexJsonPath)) {
@@ -80,12 +95,6 @@ if (!fs.existsSync(indexJsonPath)) {
         }
         if (!it.txt || !it.txt.includes("/draw/" + q.id + ".txt")) {
           errors.push(`index.json 中 ${q.id} 的 txt 路径不正确`);
-        }
-        if (!it.json || !it.json.includes("/draw/" + q.id + ".json")) {
-          errors.push(`index.json 中 ${q.id} 的 json 路径不正确`);
-        }
-        if (!it.rawHtml || !it.rawHtml.includes("raw.githubusercontent.com")) {
-          errors.push(`index.json 中 ${q.id} 缺少 raw 镜像路径`);
         }
       });
     }
@@ -118,6 +127,52 @@ if (!fs.existsSync(playPath)) {
   }
   if (!/draw\/"\s*\+\s*item\.id/.test(play)) {
     errors.push("play.html 未按编号加载对应的静态题目文件");
+  }
+}
+
+// 隐藏题库表格：必须 20 行、每行一个编号与锚点，题目在表格单元格里
+{
+  const tableMatch = indexHtml.match(/<table class="ai-bank">[\s\S]*?<\/table>/);
+  if (!tableMatch) {
+    errors.push("初始页缺少隐藏题库表格（降级路径）");
+  } else {
+    const table = tableMatch[0];
+    const rowMatches = table.match(/<tr id="row-q\d\d">/g) || [];
+    if (rowMatches.length !== list.length) {
+      errors.push(`隐藏题库表格行数为 ${rowMatches.length}，应为 ${list.length}`);
+    }
+    list.forEach((q) => {
+      if (!table.includes('id="row-' + q.id + '"')) {
+        errors.push("隐藏题库缺少 " + q.id + " 行的锚点");
+      }
+      if (!table.includes(q.text)) {
+        errors.push("隐藏题库缺少 " + q.id + " 的题目");
+      }
+    });
+    // 表格必须有表头，说明「行号」语义，AI 才能先选序号再读行
+    if (!table.includes("<th>行号</th>")) {
+      errors.push("隐藏题库表格缺少「行号」表头");
+    }
+    // 降级路径与结果页必须给同一道题，否则降级读到的题和真实抽卡结果对不上
+    list.forEach((q) => {
+      const page = path.join(ROOT, "draw", q.id + ".html");
+      if (!fs.existsSync(page)) return;
+      const pageHtml = fs.readFileSync(page, "utf8");
+      const m = pageHtml.match(/<p class="question">([\s\S]*?)<\/p>/);
+      if (!m) {
+        errors.push(q.id + ".html 缺少 .question 题目段落");
+        return;
+      }
+      if (m[1] !== q.text) {
+        errors.push(q.id + ".html 的题目段落与题库不一致");
+      }
+      const row = table.match(
+        new RegExp('<tr id="row-' + q.id + '">([\\s\\S]*?)</tr>')
+      );
+      if (row && !row[1].includes(q.text)) {
+        errors.push(q.id + " 的隐藏表格行与题库不一致");
+      }
+    });
   }
 }
 
@@ -154,11 +209,21 @@ if (!indexHtml.includes("无法访问结果页")) {
   errors.push("初始页缺少「无法访问结果页」的失败声明要求");
 }
 // 必须提供多主机 / 多格式的等价读取路径（不同平台的抓取器限制差异很大）
-if (!indexHtml.includes("raw.githubusercontent.com")) {
-  errors.push("初始页缺少 raw 镜像备用路径");
+if (!indexHtml.includes("qNN.txt")) {
+  errors.push("初始页缺少纯文本备用路径");
 }
-if (!indexHtml.includes("qNN.json")) {
-  errors.push("初始页缺少 JSON 备用路径");
+// 降级路径必须要求「先选序号、再只读那一行」，避免一次性读完整份题库
+if (!indexHtml.includes("只读取表格中该编号所在的那一行")) {
+  errors.push("初始页缺少「先选序号再读单行」的降级路径要求");
+}
+if (!indexHtml.includes("不要一次性读完整张表")) {
+  errors.push("初始页缺少「不要一次性读完整张表」的限制");
+}
+if (!indexHtml.includes("第一梯队")) {
+  errors.push("初始页缺少第一梯队（真实抽卡）说明");
+}
+if (!indexHtml.includes("第二梯队")) {
+  errors.push("初始页缺少第二梯队（降级）说明");
 }
 // 候选链接清单：只有地址，没有题面
 const linkMatches = indexHtml.match(/href="draw\/q\d\d\.html"/g) || [];
@@ -193,18 +258,13 @@ list.forEach((q) => {
     if (!txt.includes(q.text)) {
       errors.push(q.id + ".txt 未包含题目原文");
     }
-  }
-
-  // JSON 镜像
-  const jsonFile = path.join(ROOT, "draw", q.id + ".json");
-  if (!fs.existsSync(jsonFile)) {
-    errors.push("缺少 " + q.id + ".json（JSON 镜像）");
-  } else {
-    const json = JSON.parse(fs.readFileSync(jsonFile, "utf8"));
-    if (json.text !== q.text || json.id !== q.id) {
-      errors.push(q.id + ".json 内容与题库不一致");
+    // 解析约定：题目在「题目：」之后直到文末，机器可稳定取出
+    const m = txt.match(/题目：([\s\S]*)/);
+    if (!m || m[1].trim() !== q.text) {
+      errors.push(q.id + ".txt 的题目不是文件最后一行（解析约定被破坏）");
     }
   }
+
   // 题目正文直接写在 HTML 里（不是 JS 变量），因此不应出现在 <script> 中
   const bodyScript = html.split("<script")[1];
   if (bodyScript && bodyScript.includes(q.text)) {

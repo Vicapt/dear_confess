@@ -28,7 +28,7 @@
 
         <p class="foot">
           全程在浏览器端运行：<code>index.json</code> 列出全部题目文件路径，页面随机选一个编号，
-          再用 <code>fetch</code> 读取对应的 <code>draw/qNN.json</code>（同路径还有 <code>.html</code> / <code>.txt</code>，内容完全一致）。
+          再用 <code>fetch</code> 读取对应的 <code>draw/qNN.txt</code>（同路径还有 <code>.html</code>，内容完全一致）。
           没有后端、没有数据库、没有 API。
         </p>
       </section>
@@ -57,10 +57,10 @@
           return items[i];
         }
 
-        function showQuestion(item, data, srcPath) {
-          question.textContent = data.text;
+        function showQuestion(item, text, srcPath) {
+          question.textContent = text;
           question.hidden = false;
-          meta.textContent = "第 " + data.index + " 题 · 编号 " + data.id + "（共 " + data.total + " 题）";
+          meta.textContent = "第 " + item.index + " 题 · 编号 " + item.id + "（共 " + manifest.count + " 题）";
           meta.hidden = false;
 
           var a = document.getElementById("result-link");
@@ -73,21 +73,27 @@
           }
           // 用相对路径，部署到任意域名下都指向同一份静态文件
           a.href = "draw/" + item.id + ".html";
-          state.textContent = "抽到了 " + data.id + "（题目来源：" + srcPath + "）";
+          state.textContent = "抽到了 " + item.id + "（题目来源：" + srcPath + "）";
+        }
+
+        // 纯文本镜像的格式固定，取「题目：」之后的一行
+        function extractText(txt) {
+          var m = txt.match(/题目：([\s\S]*)/);
+          return m ? m[1].trim() : txt.trim();
         }
 
         function draw() {
           if (!manifest || !manifest.items.length) return;
           state.textContent = "正在抽卡…";
           var item = pickOne(manifest.items);
-          var srcPath = "draw/" + item.id + ".json";
+          var srcPath = "draw/" + item.id + ".txt";
           fetch(srcPath, { cache: "no-cache" })
             .then(function (r) {
               if (!r.ok) throw new Error("HTTP " + r.status);
-              return r.json();
+              return r.text();
             })
-            .then(function (data) {
-              showQuestion(item, data, srcPath);
+            .then(function (txt) {
+              showQuestion(item, extractText(txt), srcPath);
             })
             .catch(function (err) {
               state.textContent = "读取失败：" + err.message + "（如果用 file:// 直接打开，请改用本地服务器）";

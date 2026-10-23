@@ -34,6 +34,8 @@ jobs:
           mkdir -p dist
           cp index.html dist/
           cp -r assets draw dist/
+          # 自定义域名必须随发布一起带上，否则 Pages 会丢失 CNAME
+          [ -f CNAME ] && cp CNAME dist/ || true
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

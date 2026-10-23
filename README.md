@@ -178,14 +178,20 @@ curl -s https://your-site/play.html | grep -c 'index.json'   # 期望 >= 1
 | --- | --- | --- | --- |
 | 1 | `<head>` 里的 HTML 注释 | 看不到（源码视图除外） | 直接读源码的 AI / `curl` |
 | 2 | `<meta name="ai-instruction">` | 看不到 | 保留 meta 的抓取器、网页摘要工具 |
-| 3 | `<meta name="description">` + `og:description` | 看不到 | 同上 |
-| 4 | `<div hidden class="ai-directive">` | 看不到 | 取 DOM 文本 / 转 Markdown 的抓取器 |
-| 5 | `<details>` 里默认收起的「完整说明」 | 默认收起 | 取 DOM 文本的抓取器（兜底） |
-| 6 | `<html data-ai-task="...">` 属性 | 看不到 | 读源码的 AI |
-| 7 | `/ai.txt`、`/llms.txt`、`/robots.txt` | 纯文本，按约定抓取 | 会去读这些文件的 AI / 抓取机器人 |
-| 8 | `/index.json`（目录索引） | 纯 JSON | 需要「有哪些编号可选」的 AI |
-| 9 | 隐藏表格 `class=ai-bank`（降级路径） | 看不到 | 无法导航到新 URL 的 AI，降级时按行取题 |
-| 10 | 结果页同样的埋点 | 看不到 | AI 抽到题后知道该「回答这道题」 |
+| 3 | `<div hidden class="ai-directive">` | 看不到 | 取 DOM 文本 / 转 Markdown 的抓取器 |
+| 4 | `<details>` 里默认收起的「完整说明」 | 默认收起 | 取 DOM 文本的抓取器（兜底） |
+| 5 | `<html data-ai-task="...">` 属性 | 看不到 | 读源码的 AI |
+| 6 | `/ai.txt`、`/llms.txt`、`/robots.txt` | 纯文本，按约定抓取 | 会去读这些文件的 AI / 抓取机器人 |
+| 7 | `/index.json`（目录索引） | 纯 JSON | 需要「有哪些编号可选」的 AI |
+| 8 | 隐藏表格 `class=ai-bank`（降级路径） | 看不到 | 无法导航到新 URL 的 AI，降级时按行取题 |
+| 9 | 结果页同样的埋点 | 看不到 | AI 抽到题后知道该「回答这道题」 |
+
+> **反泄漏约束（容易被忽略的一条）**：`description` / `og:description` 这两个字段
+> **不能放指令正文**，只能放人类可读的摘要。QQ、微信等聊天软件会把它当链接卡片的
+> 副标题直接显示出来 —— 指令一旦写进去，用户把链接发到群里，就等于把内部提示词公开了。
+> 同理，隐藏指令块必须排在 `<main>` **之后**：有些卡片服务会取正文纯文本的前若干行，
+> 指令排在最前面就会被当成摘要截出来。
+> `tools/check.js` 对这两条都有断言，改动时不要绕过。
 
 指令正文统一由 [tools/build.js](tools/build.js) 生成，保证各处措辞一致、链接域名正确。
 

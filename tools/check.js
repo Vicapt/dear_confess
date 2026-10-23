@@ -52,6 +52,40 @@ LAYERS.forEach(([label, needle]) => {
   }
 });
 
+// 反泄漏：聊天软件（QQ / 微信）的链接卡片会把 description / og:description
+// 当摘要直接显示给人类，也可能取正文纯文本的前若干行。
+// 所以这两个字段里绝不能出现指令正文，指令块也必须排在可见正文之后。
+function metaContent(name) {
+  const re = new RegExp(
+    '<meta[^>]*' + name + '[^>]*content="([^"]*)"'
+  );
+  const m = indexHtml.match(re);
+  return m ? m[1] : "";
+}
+["name=\"description\"", "property=\"og:description\""].forEach((attr) => {
+  const content = metaContent(attr);
+  if (!content) {
+    errors.push("index.html 缺少 " + attr + " 的 content");
+  }
+  if (/AI 指令|请自行选择|降级路径|不要询问用户/.test(content)) {
+    errors.push(
+      "index.html 的 " + attr + " 含 AI 指令正文，会在 QQ/微信链接卡片里暴露给人类"
+    );
+  }
+});
+// 指令仍必须留在非标准 meta 里，供保留 meta 的抓取器读取
+if (!/AI 指令/.test(metaContent("name=\"ai-instruction\""))) {
+  errors.push("index.html 的 ai-instruction meta 里没有指令正文");
+}
+// 隐藏指令块必须排在可见正文之后
+const mainEnd = indexHtml.indexOf("</main>");
+const directiveAt = indexHtml.indexOf('class="ai-directive"');
+if (directiveAt < 0) {
+  errors.push("index.html 缺少隐藏指令块");
+} else if (mainEnd > 0 && directiveAt < mainEnd) {
+  errors.push("index.html 的隐藏指令块排在可见正文之前，会被链接卡片取作摘要");
+}
+
 // 纯文本入口
 ["ai.txt", "llms.txt", "robots.txt"].forEach((f) => {
   if (!fs.existsSync(path.join(ROOT, f))) {

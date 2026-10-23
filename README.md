@@ -13,7 +13,7 @@ cards/
 ├── index.html            # 初始页（含多层隐藏 AI 指令）              [生成]
 ├── play.html             # 随机抽卡页（纯前端随机：读 index.json）  [生成]
 ├── index.json            # 目录索引：全部编号与文件路径（不含题面）[生成]
-├── draw/q01.html ... q20.html  # 20 个结果页，编号固定对应一道题   [生成]
+├── draw/q01.html ... q25.html  # 25 个结果页，编号固定对应一道题   [生成]
 ├── ai.txt                # 给 AI 的纯文本指令                       [生成]
 ├── llms.txt              # 给 AI 抓取器的站点说明                    [生成]
 ├── robots.txt            # 含给 AI 的注释指令                       [生成]
@@ -108,7 +108,7 @@ npx vercel --prod
 # 1. 初始页可访问
 curl -sI https://your-site/ | head -1            # 期望 200
 
-# 2. 20 个结果页全部可访问，且题目互不相同
+# 2. 25 个结果页全部可访问，且题目互不相同
 for i in $(seq -w 1 20); do
   curl -s https://your-site/draw/q$i.html | grep -o '<p class="question">.*</p>'
 done
@@ -135,7 +135,7 @@ curl -s https://your-site/play.html | grep -c 'index.json'   # 期望 >= 1
 > 结果页地址写成「你当前正在访问的这个页面的地址 + draw/qNN.html」，而不是写死域名。
 > 这样无论 AI 从哪个入口进来，拼出来的链接都指向它真正能打开的那个主机。
 
-**为什么要「先选序号、再读那一行」**：题库整张表如果一次性进上下文，20 道题全被读走，"抽卡"就没有意义了 ——
+**为什么要「先选序号、再读那一行」**：题库整张表如果一次性进上下文，25 道题全被读走，"抽卡"就没有意义了 ——
 模型可以直接从记忆里挑一题作答，你无法区分它是真的读了第 7 行还是碰巧猜中了第 7 题。
 拆成带锚点的行（`#row-q07`）+ 明确指令，把降级路径的作弊空间压到最小。
 
@@ -148,8 +148,8 @@ curl -s https://your-site/play.html | grep -c 'index.json'   # 期望 >= 1
 
 ```json
 {
-  "count": 20,
-  "range": { "first": "q01", "last": "q20" },
+  "count": 25,
+  "range": { "first": "q01", "last": "q25" },
   "items": [
     { "id": "q01", "index": 1,
       "html": "https://cards.vicapt.top/draw/q01.html",

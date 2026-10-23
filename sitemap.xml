@@ -100,4 +100,24 @@
     <loc>https://cards.vicapt.top/draw/q20.html</loc>
     <priority>0.5</priority>
   </url>
+  <url>
+    <loc>https://cards.vicapt.top/draw/q21.html</loc>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://cards.vicapt.top/draw/q22.html</loc>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://cards.vicapt.top/draw/q23.html</loc>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://cards.vicapt.top/draw/q24.html</loc>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://cards.vicapt.top/draw/q25.html</loc>
+    <priority>0.5</priority>
+  </url>
 </urlset>

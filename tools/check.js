@@ -26,6 +26,13 @@ const lastId = list[list.length - 1].id;
 if (!indexHtml.includes(firstId) || !indexHtml.includes(lastId)) {
   errors.push("index.html 未包含题号范围 " + firstId + "-" + lastId);
 }
+// 题号范围必须由题库动态生成，不能写死（题库增减后会悄悄失效）
+if (!indexHtml.includes(firstId + "–" + lastId)) {
+  errors.push("index.html 未使用当前题号范围 " + firstId + "–" + lastId + "（疑似写死）");
+}
+if (!indexHtml.includes("题库共 " + list.length + " 道题")) {
+  errors.push("index.html 的题库总数与题库不一致（应为 " + list.length + "）");
+}
 if (!indexHtml.includes("/draw/")) {
   errors.push("index.html 未包含结果链接格式说明");
 }

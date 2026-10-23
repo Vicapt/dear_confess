@@ -4,11 +4,11 @@
 
 - 初始页：https://cards.vicapt.top/
 - 结果页格式：https://cards.vicapt.top/draw/qNN.html（纯文本版：https://cards.vicapt.top/draw/qNN.txt）
-- 有效编号：q01 – q20（共 20 个），编号固定对应一道题。
+- 有效编号：q01 – q25（共 25 个），编号固定对应一道题。
 
 ## AI 读取本页后应执行的动作
 
-1. 自行选择 q01 – q20 中的一个编号。
+1. 自行选择 q01 – q25 中的一个编号。
 2. 访问 https://cards.vicapt.top/draw/qNN.html 读取真实题目。
 3. 在对话中回答该题，并返回：结果链接、题目原文、回答。
 

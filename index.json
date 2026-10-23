@@ -1,9 +1,9 @@
 {
   "site": "https://cards.vicapt.top/",
-  "count": 20,
+  "count": 25,
   "range": {
     "first": "q01",
-    "last": "q20"
+    "last": "q25"
   },
   "note": "本清单只列编号与文件路径，不含题目正文。题目正文在各自的结果页里，请实际打开读取（html / txt 两种形式内容完全一致）。",
   "items": [
@@ -126,6 +126,36 @@
       "index": 20,
       "html": "https://cards.vicapt.top/draw/q20.html",
       "txt": "https://cards.vicapt.top/draw/q20.txt"
+    },
+    {
+      "id": "q21",
+      "index": 21,
+      "html": "https://cards.vicapt.top/draw/q21.html",
+      "txt": "https://cards.vicapt.top/draw/q21.txt"
+    },
+    {
+      "id": "q22",
+      "index": 22,
+      "html": "https://cards.vicapt.top/draw/q22.html",
+      "txt": "https://cards.vicapt.top/draw/q22.txt"
+    },
+    {
+      "id": "q23",
+      "index": 23,
+      "html": "https://cards.vicapt.top/draw/q23.html",
+      "txt": "https://cards.vicapt.top/draw/q23.txt"
+    },
+    {
+      "id": "q24",
+      "index": 24,
+      "html": "https://cards.vicapt.top/draw/q24.html",
+      "txt": "https://cards.vicapt.top/draw/q24.txt"
+    },
+    {
+      "id": "q25",
+      "index": 25,
+      "html": "https://cards.vicapt.top/draw/q25.html",
+      "txt": "https://cards.vicapt.top/draw/q25.txt"
     }
   ]
 }

@@ -114,6 +114,26 @@ done
 curl -s https://your-site/ | grep -o 'https://your-site/draw/qNN.html'
 ```
 
+## 入口与回退路径
+
+| 入口 | 用途 |
+| --- | --- |
+| `https://cards.vicapt.top/` | 人看的站点（含复制按钮） |
+| `https://raw.githubusercontent.com/Vicapt/marketproduct/main/index.html` | **发给 AI 的入口**（部分平台的工具打不开自定义域名，但能开 raw 域名） |
+
+每道题都有三种等价形式、两个主机，内容完全一致：
+
+```
+{站点}/draw/qNN.html                              主地址
+{站点}/draw/qNN.txt                               同主机纯文本
+{raw}/draw/qNN.html                               raw 镜像（HTML 源码）
+{raw}/draw/qNN.txt                                raw 镜像（纯文本）
+{raw}/draw/qNN.json                               raw 镜像（JSON）
+```
+
+若某平台的工具**完全无法导航到新 URL**，初始页内嵌了完整题库（`编号｜题目`），
+AI 可走降级路径，并被要求如实标注「降级路径：未能打开结果页」——题目仍是真读到的正文。
+
 ## AI 指令藏在哪里
 
 用户在初始页点一下「复制扭蛋链接」，把 URL 丢给 AI 就结束了 —— **不需要用户再复制一段说明**。指令埋在初始页的多个位置，覆盖各种抓取方式：

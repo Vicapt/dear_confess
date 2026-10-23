@@ -12,11 +12,29 @@
 
 | 用途 | 链接 |
 | --- | --- |
-| 初始页（发给 AI 的那个） | `https://YOUR-SITE/` |
-| 结果页示例 | `https://YOUR-SITE/draw/q07.html` |
-| 结果页范围 | `https://YOUR-SITE/draw/q01.html` … `https://YOUR-SITE/draw/q20.html` |
+| 初始页（人看的那个） | `https://cards.vicapt.top/` |
+| **AI 入口（推荐发给 AI）** | `https://raw.githubusercontent.com/Vicapt/marketproduct/main/index.html` |
+| 纯文本 AI 入口 | `https://raw.githubusercontent.com/Vicapt/marketproduct/main/ai.txt` |
+| 结果页示例 | `https://cards.vicapt.top/draw/q07.html` |
+| 结果页（raw 镜像） | `https://raw.githubusercontent.com/Vicapt/marketproduct/main/draw/q07.html` |
+| 结果页范围 | `q01` … `q20`，每题都有 `.html` / `.txt` / `.json` 三种等价形式 |
+
+> **为什么要给 AI 发 raw 入口**：实测部分平台的网页读取工具打不开自定义域名
+> （`*.vicapt.top`），但能正常打开 `github.com` 与 `raw.githubusercontent.com`。
+> 发 raw 入口能让这类平台走完整的「读指令 → 拼结果页地址 → 打开 → 读题 → 回答」。
 
 本地开发时初始页为 `http://localhost:5173/`，但 **localhost 对外部 AI 不可达**，不能用于本测试。
+
+## 二之二、平台实测记录（持续更新）
+
+| 平台 | 能否打开 `cards.vicapt.top` | 能否打开 `raw.githubusercontent.com` | 能否联网 | 结论 |
+| --- | --- | --- | --- | --- |
+| 混元 | ✅ | — | ✅ | 完整五步通过 |
+| GPT | ❌（域名级拒绝） | ✅ | ✅ | 需改用 raw 入口 |
+| DeepSeek | ❌ | ❌ | ❌（无外网能力） | 平台限制，非站点问题 |
+
+> DeepSeek 这一行是**平台能力边界**：没有外网就无法访问任何网页，无论站点怎么部署。
+> 这类结果应记录为「平台不支持」，而不是「站点失败」。
 
 ## 三、测试步骤
 

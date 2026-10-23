@@ -356,6 +356,8 @@ function main() {
   const html = template
     .split("{{SITE_URL}}")
     .join(base)
+    .split("{{RAW_URL}}")
+    .join(rawBase + "/index.html")
     .split("{{AI_DIRECTIVE_TEXT}}")
     .join(directiveText)
     .split("{{AI_DIRECTIVE_HTML}}")

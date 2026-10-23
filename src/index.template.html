@@ -52,6 +52,7 @@
         </ol>
 
         <button class="btn-primary" id="copy-link" type="button">复制扭蛋链接</button>
+        <button class="btn-ghost" id="copy-raw" type="button">复制 AI 入口链接（raw 镜像）</button>
         <button class="btn-ghost" id="copy-prompt" type="button">复制给 AI 的说明（可选）</button>
         <p class="note" id="status">本页面地址：{{SITE_URL}}</p>
 
@@ -71,6 +72,7 @@
     <script>
       (function () {
         var BAKED_URL = "{{SITE_URL}}";
+        var RAW_URL = "{{RAW_URL}}";
         var PROMPT_TEXT = {{PROMPT_JSON}};
         var status = document.getElementById("status");
         var timer = null;
@@ -126,6 +128,13 @@
           .addEventListener("click", function () {
             var text = PROMPT_TEXT.split(BAKED_URL).join(SITE_URL);
             copy(text, "已复制说明，请粘贴给 AI。");
+          });
+
+        // AI 入口（raw 镜像）：部分平台的网页工具打不开自定义域名，但能开 raw 域名
+        document
+          .getElementById("copy-raw")
+          .addEventListener("click", function () {
+            copy(RAW_URL, "已复制 AI 入口：" + RAW_URL);
           });
 
         status.textContent = "本页面地址：" + SITE_URL;

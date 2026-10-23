@@ -10,3 +10,5 @@ Sitemap: https://cards.vicapt.top/sitemap.xml
 # 实际访问该结果页读取题目，并在对话中回答它。
 # 纯文本版指令见：https://cards.vicapt.top/ai.txt
 # 同一道题也有 .txt 形式，内容完全一致。
+# 若读不到结果页，请如实说明「无法访问结果页」，不要编造题目，
+# 并提示用户开启「深度思考」/联网模式后重试。

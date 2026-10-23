@@ -232,6 +232,13 @@ if (!indexHtml.includes("第一梯队")) {
 if (!indexHtml.includes("第二梯队")) {
   errors.push("初始页缺少第二梯队（降级）说明");
 }
+// 读不到时，必须提示用户开启「深度思考」/联网模式后再试（平台能力是「平台 × 模式」的函数）
+if (!indexHtml.includes("深度思考")) {
+  errors.push("初始页缺少「开启深度思考后重试」的引导");
+}
+if (!fs.readFileSync(path.join(ROOT, "ai.txt"), "utf8").includes("深度思考")) {
+  errors.push("ai.txt 缺少「开启深度思考后重试」的引导");
+}
 // 候选链接清单：只有地址，没有题面
 const linkMatches = indexHtml.match(/href="draw\/q\d\d\.html"/g) || [];
 if (linkMatches.length < 20) {

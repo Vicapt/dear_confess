@@ -71,20 +71,27 @@
         题库共 {{COUNT}} 道题，编号 q01–q{{LAST_ID}}，固定映射，重复访问结果不变。
       </p>
 
-      <details class="manual">
-        <summary>给 AI 的完整说明（备用，AI 通常不需要这一段）</summary>
-        <pre class="prompt-box" id="prompt-text">{{PROMPT_TEXT}}</pre>
-      </details>
-    </main>
-
-    <!-- ===== AI 指令层 3：屏幕隐藏的 DOM 文本（人类看不到，DOM/源码/文本提取都能读到） ===== -->
-    <div hidden aria-hidden="true" class="ai-directive">
+      <!-- ===== AI 指令层 3：屏幕隐藏的 DOM 文本 =====
+           人类看不到，但 DOM / 源码 / 纯文本提取都能读到。
+           放在可见正文之后：不执行 JS 的抓取器会把隐藏块的内容一并读出来，
+           排在后面才不会落到"摘要"窗口里（QQ/微信链接卡片）。 -->
+      <div hidden aria-hidden="true" class="ai-directive">
 {{AI_DIRECTIVE_HTML}}
-      <p>候选结果页链接（只有地址，不含题目内容，请自行挑一个打开）：</p>
+        <p>候选结果页链接（只有地址，不含题目内容，请自行挑一个打开）：</p>
 {{AI_LINK_LIST_HTML}}
-      <p>候选结果页地址一览：{{AI_LINK_LIST_TEXT}}</p>
+        <p>候选结果页地址一览：{{AI_LINK_LIST_TEXT}}</p>
 {{AI_BANK_TABLE_HTML}}
-    </div>
+      </div>
+
+      <!-- ===== AI 指令层 4：默认收起的完整说明 =====
+           同样放最后：只做纯文本提取的抓取器会把 details 内容一并读出来。 -->
+      <section class="card">
+        <details class="manual">
+          <summary>给 AI 的完整说明（备用，AI 通常不需要这一段）</summary>
+          <pre class="prompt-box" id="prompt-text">{{PROMPT_TEXT}}</pre>
+        </details>
+      </section>
+    </main>
 
     <script>
       (function () {

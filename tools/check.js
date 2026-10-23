@@ -78,11 +78,12 @@ if (!/AI 指令/.test(metaContent("name=\"ai-instruction\""))) {
   errors.push("index.html 的 ai-instruction meta 里没有指令正文");
 }
 // 隐藏指令块必须排在可见正文之后
-const mainEnd = indexHtml.indexOf("</main>");
+// （可见正文 = 卡片 section + 题库说明；details 里的完整说明也算指令内容）
+const visibleEnd = indexHtml.indexOf("</section>");
 const directiveAt = indexHtml.indexOf('class="ai-directive"');
 if (directiveAt < 0) {
   errors.push("index.html 缺少隐藏指令块");
-} else if (mainEnd > 0 && directiveAt < mainEnd) {
+} else if (visibleEnd > 0 && directiveAt < visibleEnd) {
   errors.push("index.html 的隐藏指令块排在可见正文之前，会被链接卡片取作摘要");
 }
 

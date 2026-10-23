@@ -73,6 +73,13 @@ if (!domText(indexHtml).includes("请立即自行完成一次 AI 真心话扭蛋
 if (!domText(indexHtml).includes("/draw/q")) {
   errors.push("初始页的纯文本层读不到结果链接格式");
 }
+// 指令必须自带「以实际访问到的地址为准」的兜底，防止旧缓存里的占位域名误导 AI
+if (!indexHtml.includes("一切以你实际访问到的地址为准")) {
+  errors.push("初始页缺少「以你实际访问到的地址为准」的兜底说明");
+}
+if (/\bexample\.com\b/.test(indexHtml)) {
+  errors.push("index.html 仍残留 example.com 占位域名");
+}
 
 const seenTexts = new Map();
 list.forEach((q) => {
@@ -87,6 +94,17 @@ list.forEach((q) => {
   }
   if (!html.includes(q.id)) {
     errors.push(q.id + ".html 未显示题目编号");
+  }
+
+  // 纯文本镜像
+  const txtFile = path.join(ROOT, "draw", q.id + ".txt");
+  if (!fs.existsSync(txtFile)) {
+    errors.push("缺少 " + q.id + ".txt（纯文本镜像）");
+  } else {
+    const txt = fs.readFileSync(txtFile, "utf8");
+    if (!txt.includes(q.text)) {
+      errors.push(q.id + ".txt 未包含题目原文");
+    }
   }
   // 题目正文直接写在 HTML 里（不是 JS 变量），因此不应出现在 <script> 中
   const bodyScript = html.split("<script")[1];

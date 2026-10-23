@@ -77,6 +77,13 @@ if (!domText(indexHtml).includes("/draw/q")) {
 if (!indexHtml.includes("一切以你实际访问到的地址为准")) {
   errors.push("初始页缺少「以你实际访问到的地址为准」的兜底说明");
 }
+// 指令必须包含五步自检要求
+if (!indexHtml.includes("自检：完成后请逐项确认")) {
+  errors.push("初始页缺少五步自检要求");
+}
+if (!indexHtml.includes("无法访问结果页")) {
+  errors.push("初始页缺少「无法访问结果页」的失败声明要求");
+}
 if (/\bexample\.com\b/.test(indexHtml)) {
   errors.push("index.html 仍残留 example.com 占位域名");
 }

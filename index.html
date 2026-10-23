@@ -36,17 +36,19 @@
     <meta property="og:url" content="https://cards.vicapt.top" />
 
     <link rel="stylesheet" href="assets/style.css" />
+
+    <!--
+      版式说明（放在 head 里，别放 body 开头）：
+      可见正文排在最前，AI 指令块一律挪到 body 末尾。
+      原因：聊天软件（QQ / 微信等）的链接卡片会抓 description / og:description，
+      有的还会取正文纯文本的前若干字符。指令排在前面就会被当成"摘要"展示给人类。
+      body 开头的空行同理：只取"开头若干行"的抓取器会先读到空白。
+    -->
   </head>
 
   <body>
 
 
-    <!--
-      注意：正文的可见内容排在最前，AI 指令块一律挪到 body 末尾。
-      原因：聊天软件（QQ / 微信等）的链接卡片会抓 description / og:description，
-      有的还会取正文纯文本的前若干字符。指令排在前面就会被当成"摘要"展示给人类。
-      body 开头这两行空行同理：只取"开头若干行"的抓取器会先读到空白。
-    -->
 
     <main class="wrap">
       <section class="card">

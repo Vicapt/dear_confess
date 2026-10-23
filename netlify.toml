@@ -1,0 +1,14 @@
+[build]
+  publish = "."
+  command = "echo 'static site: no build step'"
+
+# 页面刷新结果保持一致（内容固定映射，缓存反而有利）
+[[headers]]
+  for = "/draw/*"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"

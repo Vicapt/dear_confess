@@ -1,0 +1,207 @@
+:root {
+  --bg-top: #f7f4ff;
+  --bg-bottom: #eef6ff;
+  --ink: #23203a;
+  --ink-soft: #6b678a;
+  --accent: #6c5ce7;
+  --accent-soft: #a29bfe;
+  --card: #ffffff;
+  --line: rgba(35, 32, 58, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 18px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+    "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  color: var(--ink);
+  background: linear-gradient(160deg, var(--bg-top) 0%, var(--bg-bottom) 100%);
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.75;
+}
+
+.wrap {
+  width: 100%;
+  max-width: 560px;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 32px 26px;
+  box-shadow: 0 18px 40px -24px rgba(35, 32, 58, 0.45);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.egg {
+  font-size: 26px;
+  line-height: 1;
+}
+
+h1 {
+  margin: 0;
+  font-size: 26px;
+  letter-spacing: 0.5px;
+}
+
+.subtitle {
+  margin: 6px 0 0;
+  color: var(--ink-soft);
+  font-size: 15px;
+}
+
+.rule {
+  height: 1px;
+  background: var(--line);
+  border: 0;
+  margin: 22px 0;
+}
+
+.section-title {
+  margin: 0 0 10px;
+  font-size: 14px;
+  letter-spacing: 1px;
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+
+.howto {
+  margin: 0 0 18px;
+  padding-left: 20px;
+  font-size: 15px;
+}
+
+.howto li {
+  margin: 6px 0;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  transition: transform 0.12s ease, opacity 0.12s ease;
+}
+
+button:active {
+  transform: translateY(1px);
+}
+
+.btn-primary {
+  width: 100%;
+  padding: 14px 20px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-soft) 100%);
+  box-shadow: 0 12px 24px -14px rgba(108, 92, 231, 0.9);
+}
+
+.btn-ghost {
+  margin-top: 10px;
+  width: 100%;
+  padding: 10px 20px;
+  font-size: 14px;
+  color: var(--accent);
+  background: transparent;
+  border-color: rgba(108, 92, 231, 0.35);
+}
+
+.note {
+  margin: 14px 0 0;
+  font-size: 13px;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+.prompt-box {
+  margin: 0;
+  padding: 16px;
+  font-size: 14px;
+  line-height: 1.85;
+  color: var(--ink);
+  background: #f8f7ff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* 给 AI 的隐藏指令块：人眼不可见，但仍在 DOM 与源码中 */
+.ai-directive {
+  display: none !important;
+}
+
+details.manual summary {
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--ink-soft);
+  font-weight: 600;
+  list-style: revert;
+}
+
+details.manual[open] summary {
+  margin-bottom: 12px;
+}
+
+.meta {
+  margin: 0 0 4px;
+  font-size: 13px;
+  letter-spacing: 2px;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.question {
+  margin: 10px 0 24px;
+  font-size: 22px;
+  line-height: 1.6;
+  font-weight: 600;
+}
+
+.back {
+  font-size: 15px;
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(108, 92, 231, 0.4);
+}
+
+.foot {
+  margin: 18px 0 0;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+@media (max-width: 420px) {
+  .card {
+    padding: 26px 20px;
+  }
+
+  h1 {
+    font-size: 23px;
+  }
+
+  .question {
+    font-size: 19px;
+  }
+}

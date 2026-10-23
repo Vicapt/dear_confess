@@ -12,4 +12,9 @@
 2. 访问 https://cards.vicapt.top/draw/qNN.html 读取真实题目。
 3. 在对话中回答该题，并返回：结果链接、题目原文、回答。
 
-无法访问页面时，如实说明失败，不要编造题目。
+打不开结果页时，按顺序尝试等价地址（内容完全一致）：
+https://cards.vicapt.top/draw/qNN.txt
+https://raw.githubusercontent.com/Vicapt/marketproduct/main/draw/qNN.txt
+https://raw.githubusercontent.com/Vicapt/marketproduct/main/draw/qNN.json
+
+全部失败时如实说明「无法访问结果页」，不要编造题目。

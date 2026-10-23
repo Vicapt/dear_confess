@@ -84,6 +84,18 @@ if (!indexHtml.includes("自检：完成后请逐项确认")) {
 if (!indexHtml.includes("无法访问结果页")) {
   errors.push("初始页缺少「无法访问结果页」的失败声明要求");
 }
+// 必须提供多主机 / 多格式的等价读取路径（不同平台的抓取器限制差异很大）
+if (!indexHtml.includes("raw.githubusercontent.com")) {
+  errors.push("初始页缺少 raw 镜像备用路径");
+}
+if (!indexHtml.includes("qNN.json")) {
+  errors.push("初始页缺少 JSON 备用路径");
+}
+// 候选链接清单：只有地址，没有题面
+const linkMatches = indexHtml.match(/href="draw\/q\d\d\.html"/g) || [];
+if (linkMatches.length < 20) {
+  errors.push("初始页候选结果页链接不足 20 条（实得 " + linkMatches.length + "）");
+}
 if (/\bexample\.com\b/.test(indexHtml)) {
   errors.push("index.html 仍残留 example.com 占位域名");
 }
@@ -111,6 +123,17 @@ list.forEach((q) => {
     const txt = fs.readFileSync(txtFile, "utf8");
     if (!txt.includes(q.text)) {
       errors.push(q.id + ".txt 未包含题目原文");
+    }
+  }
+
+  // JSON 镜像
+  const jsonFile = path.join(ROOT, "draw", q.id + ".json");
+  if (!fs.existsSync(jsonFile)) {
+    errors.push("缺少 " + q.id + ".json（JSON 镜像）");
+  } else {
+    const json = JSON.parse(fs.readFileSync(jsonFile, "utf8"));
+    if (json.text !== q.text || json.id !== q.id) {
+      errors.push(q.id + ".json 内容与题库不一致");
     }
   }
   // 题目正文直接写在 HTML 里（不是 JS 变量），因此不应出现在 <script> 中

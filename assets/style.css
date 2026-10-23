@@ -192,6 +192,23 @@ details.manual[open] summary {
   color: var(--ink-soft);
 }
 
+.foot a {
+  color: var(--accent);
+}
+
+code {
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: #f2f1fb;
+  font-size: 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+button[disabled] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 @media (max-width: 420px) {
   .card {
     padding: 26px 20px;

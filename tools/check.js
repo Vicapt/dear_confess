@@ -52,6 +52,75 @@ LAYERS.forEach(([label, needle]) => {
   }
 });
 
+// index.json：机器可读的目录索引
+const indexJsonPath = path.join(ROOT, "index.json");
+if (!fs.existsSync(indexJsonPath)) {
+  errors.push("缺少 index.json（目录索引）");
+} else {
+  let manifest;
+  try {
+    manifest = JSON.parse(fs.readFileSync(indexJsonPath, "utf8"));
+  } catch (e) {
+    errors.push("index.json 不是合法 JSON：" + e.message);
+  }
+  if (manifest) {
+    if (manifest.count !== list.length) {
+      errors.push(`index.json 的 count（${manifest.count}）与题目数（${list.length}）不一致`);
+    }
+    if (!manifest.items || manifest.items.length !== list.length) {
+      errors.push("index.json 的 items 数量与题目数不一致");
+    } else {
+      list.forEach((q, i) => {
+        const it = manifest.items[i];
+        if (it.id !== q.id) {
+          errors.push(`index.json 第 ${i + 1} 项 id 不对：期望 ${q.id}，实际 ${it.id}`);
+        }
+        if (!it.html || !it.html.includes("/draw/" + q.id + ".html")) {
+          errors.push(`index.json 中 ${q.id} 的 html 路径不正确`);
+        }
+        if (!it.txt || !it.txt.includes("/draw/" + q.id + ".txt")) {
+          errors.push(`index.json 中 ${q.id} 的 txt 路径不正确`);
+        }
+        if (!it.json || !it.json.includes("/draw/" + q.id + ".json")) {
+          errors.push(`index.json 中 ${q.id} 的 json 路径不正确`);
+        }
+        if (!it.rawHtml || !it.rawHtml.includes("raw.githubusercontent.com")) {
+          errors.push(`index.json 中 ${q.id} 缺少 raw 镜像路径`);
+        }
+      });
+    }
+    // 清单不含题面：保证 AI 仍必须实际打开结果页读题
+    const manifestRaw = fs.readFileSync(indexJsonPath, "utf8");
+    list.forEach((q) => {
+      if (manifestRaw.includes(q.text)) {
+        errors.push("index.json 不应包含题目正文（否则 AI 无需访问结果页）");
+      }
+    });
+  }
+}
+
+// 初始页应当把 index.json 作为可选清单指出来
+if (!indexHtml.includes("index.json")) {
+  errors.push("初始页未提及 index.json（目录索引）");
+}
+
+// 随机抽卡页：纯前端实现
+const playPath = path.join(ROOT, "play.html");
+if (!fs.existsSync(playPath)) {
+  errors.push("缺少 play.html（随机抽卡页）");
+} else {
+  const play = fs.readFileSync(playPath, "utf8");
+  if (!play.includes("index.json")) {
+    errors.push("play.html 未读取 index.json");
+  }
+  if (!play.includes("Math.random")) {
+    errors.push("play.html 未实现随机选择");
+  }
+  if (!/draw\/"\s*\+\s*item\.id/.test(play)) {
+    errors.push("play.html 未按编号加载对应的静态题目文件");
+  }
+}
+
 // 模拟常见抓取器：去掉 script/style/注释后取 DOM 文本，确认指令仍然读得到
 function domText(html) {
   return html

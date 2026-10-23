@@ -11,6 +11,8 @@
 ```
 cards/
 ├── index.html            # 初始页（含多层隐藏 AI 指令）              [生成]
+├── play.html             # 随机抽卡页（纯前端随机：读 index.json）  [生成]
+├── index.json            # 目录索引：全部编号与文件路径（不含题面）[生成]
 ├── draw/q01.html ... q20.html  # 20 个结果页，编号固定对应一道题   [生成]
 ├── ai.txt                # 给 AI 的纯文本指令                       [生成]
 ├── llms.txt              # 给 AI 抓取器的站点说明                    [生成]
@@ -18,6 +20,7 @@ cards/
 ├── assets/style.css      # 共用样式
 ├── questions.json        # ★ 题库：唯一需要手工维护的文件
 ├── src/index.template.html # 初始页模板                            [生成用]
+├── src/play.template.html  # 随机抽卡页模板                        [生成用]
 ├── tools/build.js        # 生成器：questions.json -> 静态页面
 ├── tools/check.js        # 校验器：检查编号/题目一一对应 + 指令埋点是否有效
 ├── tools/serve.js        # 本地预览服务器
@@ -112,6 +115,10 @@ done
 
 # 3. 初始页里写的是真实域名
 curl -s https://your-site/ | grep -o 'https://your-site/draw/qNN.html'
+
+# 4. 目录索引可用，且与题库一致
+curl -s https://your-site/index.json | head -5
+curl -s https://your-site/play.html | grep -c 'index.json'   # 期望 >= 1
 ```
 
 ## 入口与回退路径
@@ -134,6 +141,31 @@ curl -s https://your-site/ | grep -o 'https://your-site/draw/qNN.html'
 若某平台的工具**完全无法导航到新 URL**，初始页内嵌了完整题库（`编号｜题目`），
 AI 可走降级路径，并被要求如实标注「降级路径：未能打开结果页」——题目仍是真读到的正文。
 
+## 目录索引（index.json）与纯前端随机抽卡
+
+`index.json` 是构建时生成的**机器可读目录索引**，列出全部编号与各自的文件路径（HTML / TXT / JSON × 三个主机），但**不含题面**：
+
+```json
+{
+  "count": 20,
+  "range": { "first": "q01", "last": "q20" },
+  "items": [
+    { "id": "q01", "index": 1,
+      "html": "https://cards.vicapt.top/draw/q01.html",
+      "txt":  "https://cards.vicapt.top/draw/q01.txt",
+      "json": "https://cards.vicapt.top/draw/q01.json",
+      "rawHtml": "https://raw.githubusercontent.com/.../draw/q01.html" }
+  ]
+}
+```
+
+用途有两个：
+
+1. **给 AI 看**：AI 读到 `index.json` 就知道有哪些编号可选、每道题的文件在哪一条路径上。它只是「菜单」，题目正文仍必须去结果页实际读取（`tools/check.js` 会断言清单里没有题面，防止 AI 跳过访问直接抄题）。
+2. **给人玩**：`play.html`（[随机抽卡页](https://cards.vicapt.top/play.html)）是纯前端实现 —— `fetch("index.json")` → `Math.random()` 选一个编号 → `fetch("draw/qNN.json")` 取题并显示。没有后端、没有数据库、没有 API，部署到任何静态托管都能跑。
+
+> 为什么不把随机抽卡做在初始页上？初始页是**AI 入口**，页面内的随机结果会随刷新变化，AI 每次读到的东西不一样，破坏「固定映射 / 重复访问结果不变」这条最基本的可验证性。所以随机抽卡单独放在 `play.html`。
+
 ## AI 指令藏在哪里
 
 用户在初始页点一下「复制扭蛋链接」，把 URL 丢给 AI 就结束了 —— **不需要用户再复制一段说明**。指令埋在初始页的多个位置，覆盖各种抓取方式：
@@ -147,7 +179,8 @@ AI 可走降级路径，并被要求如实标注「降级路径：未能打开�
 | 5 | `<details>` 里默认收起的「完整说明」 | 默认收起 | 取 DOM 文本的抓取器（兜底） |
 | 6 | `<html data-ai-task="...">` 属性 | 看不到 | 读源码的 AI |
 | 7 | `/ai.txt`、`/llms.txt`、`/robots.txt` | 纯文本，按约定抓取 | 会去读这些文件的 AI / 抓取机器人 |
-| 8 | 结果页同样的埋点 | 看不到 | AI 抽到题后知道该「回答这道题」 |
+| 8 | `/index.json`（目录索引） | 纯 JSON | 需要「有哪些编号可选」的 AI |
+| 9 | 结果页同样的埋点 | 看不到 | AI 抽到题后知道该「回答这道题」 |
 
 指令正文统一由 [tools/build.js](tools/build.js) 生成，保证各处措辞一致、链接域名正确。
 

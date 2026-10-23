@@ -32,7 +32,8 @@ jobs:
       - name: Stage publish directory
         run: |
           mkdir -p dist
-          cp index.html dist/
+          cp index.html play.html index.json dist/
+          cp ai.txt llms.txt robots.txt sitemap.xml dist/
           cp -r assets draw dist/
           # 自定义域名必须随发布一起带上，否则 Pages 会丢失 CNAME
           [ -f CNAME ] && cp CNAME dist/ || true

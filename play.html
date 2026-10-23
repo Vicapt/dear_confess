@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>随机抽一题 · AI 真心话扭蛋</title>
+    <meta name="description" content="纯前端随机抽卡：读取 index.json 目录索引，随机选中一个编号，再加载对应的静态题目文件。全程在浏览器端完成，无需服务器。" />
+    <link rel="stylesheet" href="assets/style.css" />
+  </head>
+
+  <body>
+    <main class="wrap">
+      <section class="card">
+        <div class="brand">
+          <span class="egg" aria-hidden="true">🎲</span>
+          <h1>随机抽一题</h1>
+        </div>
+        <p class="subtitle">纯前端随机：读目录索引 → 随机选编号 → 加载该题的静态文件</p>
+
+        <hr class="rule" />
+
+        <p class="meta" id="state">正在读取目录索引 index.json…</p>
+        <p class="question" id="question" hidden></p>
+        <p class="meta" id="meta" hidden></p>
+
+        <button class="btn-primary" id="draw" type="button" disabled>抽一扭</button>
+        <a class="back" href="index.html">← 返回扭蛋初始页</a>
+
+        <p class="foot">
+          全程在浏览器端运行：<code>index.json</code> 列出全部题目文件路径，页面随机选一个编号，
+          再用 <code>fetch</code> 读取对应的 <code>draw/qNN.json</code>（同路径还有 <code>.html</code> / <code>.txt</code>，内容完全一致）。
+          没有后端、没有数据库、没有 API。
+        </p>
+      </section>
+    </main>
+
+    <script>
+      (function () {
+        var state = document.getElementById("state");
+        var question = document.getElementById("question");
+        var meta = document.getElementById("meta");
+        var drawBtn = document.getElementById("draw");
+
+        var manifest = null;
+
+        function loadManifest() {
+          // 相对路径：无论部署在哪个域名下都能找到同目录的 index.json
+          return fetch("index.json", { cache: "no-cache" })
+            .then(function (r) {
+              if (!r.ok) throw new Error("HTTP " + r.status);
+              return r.json();
+            });
+        }
+
+        function pickOne(items) {
+          var i = Math.floor(Math.random() * items.length);
+          return items[i];
+        }
+
+        function showQuestion(item, data, srcPath) {
+          question.textContent = data.text;
+          question.hidden = false;
+          meta.textContent = "第 " + data.index + " 题 · 编号 " + data.id + "（共 " + data.total + " 题）";
+          meta.hidden = false;
+
+          var a = document.getElementById("result-link");
+          if (!a) {
+            a = document.createElement("a");
+            a.id = "result-link";
+            a.className = "back";
+            a.textContent = "打开这张结果页 →";
+            meta.parentNode.insertBefore(a, meta.nextSibling);
+          }
+          // 用相对路径，部署到任意域名下都指向同一份静态文件
+          a.href = "draw/" + item.id + ".html";
+          state.textContent = "抽到了 " + data.id + "（题目来源：" + srcPath + "）";
+        }
+
+        function draw() {
+          if (!manifest || !manifest.items.length) return;
+          state.textContent = "正在抽卡…";
+          var item = pickOne(manifest.items);
+          var srcPath = "draw/" + item.id + ".json";
+          fetch(srcPath, { cache: "no-cache" })
+            .then(function (r) {
+              if (!r.ok) throw new Error("HTTP " + r.status);
+              return r.json();
+            })
+            .then(function (data) {
+              showQuestion(item, data, srcPath);
+            })
+            .catch(function (err) {
+              state.textContent = "读取失败：" + err.message + "（如果用 file:// 直接打开，请改用本地服务器）";
+            });
+        }
+
+        drawBtn.addEventListener("click", draw);
+
+        loadManifest()
+          .then(function (m) {
+            manifest = m;
+            drawBtn.disabled = false;
+            state.textContent =
+              "已读取目录索引：共 " + m.count + " 题（" + m.range.first + " – " + m.range.last + "）。点「抽一扭」开始。";
+          })
+          .catch(function (err) {
+            state.textContent = "读取 index.json 失败：" + err.message + "（如果用 file:// 直接打开，请改用本地服务器）";
+          });
+      })();
+    </script>
+  </body>
+</html>

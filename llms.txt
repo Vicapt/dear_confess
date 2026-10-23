@@ -5,6 +5,7 @@
 - 初始页：https://cards.vicapt.top/
 - 结果页格式：https://cards.vicapt.top/draw/qNN.html
 - 有效编号：q01 – q20（共 20 个），编号固定对应一道题。
+- 目录索引（机器可读，含编号与文件路径，不含题面）：https://cards.vicapt.top/index.json
 
 ## AI 读取本页后应执行的动作
 

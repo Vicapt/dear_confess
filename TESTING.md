@@ -15,6 +15,9 @@
 | 初始页（人看的那个） | `https://cards.vicapt.top/` |
 | **AI 入口（推荐发给 AI）** | `https://raw.githubusercontent.com/Vicapt/marketproduct/main/index.html` |
 | 纯文本 AI 入口 | `https://raw.githubusercontent.com/Vicapt/marketproduct/main/ai.txt` |
+| 目录索引（机器可读清单） | `https://cards.vicapt.top/index.json` |
+| 目录索引（raw 镜像） | `https://raw.githubusercontent.com/Vicapt/marketproduct/main/index.json` |
+| 随机抽卡页（人看的，纯前端随机） | `https://cards.vicapt.top/play.html` |
 | 结果页示例 | `https://cards.vicapt.top/draw/q07.html` |
 | 结果页（raw 镜像） | `https://raw.githubusercontent.com/Vicapt/marketproduct/main/draw/q07.html` |
 | 结果页范围 | `q01` … `q20`，每题都有 `.html` / `.txt` / `.json` 三种等价形式 |
@@ -131,3 +134,26 @@ node tools/check.js
 ```
 
 输出 `校验通过：20 个结果页，编号与题目一一对应且互不重复。` 即说明站点结构正确；剩下的只有 AI 侧的实际访问验证。
+
+校验器还会检查：`index.json` 与题库一一对应且**不含题面**（防止 AI 跳过访问结果页）、
+`play.html` 确实读了 `index.json` 并按编号加载对应静态文件、初始页提及了 `index.json`。
+
+## 八、纯前端随机抽卡的独立验证
+
+这一条与 AI 无关，单独验证「纯静态 + 目录索引 + 前端随机」这条链路：
+
+```bash
+# 1. 清单可读、条目数正确
+curl -s https://cards.vicapt.top/index.json | node -e "
+  let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{
+    const m=JSON.parse(s);console.log(m.count, m.items[0].id, m.items[19].id);
+  })"
+
+# 2. 页面确实读清单并随机取题（浏览器打开 play.html，点「抽一扭」）
+#    期望：显示「第 N 题 · 编号 qNN」+ 题目原文 + 一个指向 draw/qNN.html 的链接
+
+# 3. 随机但可达：抽到的编号总能打开
+curl -sI https://cards.vicapt.top/draw/q13.html | head -1   # 期望 200
+```
+
+刷新 `play.html` 会抽到不同编号；每个编号对应的题目固定不变（与直接访问 `draw/qNN.html` 一致）。

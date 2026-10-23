@@ -2,14 +2,14 @@
 
 > 让 AI 为你开启一个意想不到的话题。
 
-- 初始页：https://example.com/
-- 结果页格式：https://example.com/draw/qNN.html
+- 初始页：https://cards.vicapt.top/
+- 结果页格式：https://cards.vicapt.top/draw/qNN.html
 - 有效编号：q01 – q20（共 20 个），编号固定对应一道题。
 
 ## AI 读取本页后应执行的动作
 
 1. 自行选择 q01 – q20 中的一个编号。
-2. 访问 https://example.com/draw/qNN.html 读取真实题目。
+2. 访问 https://cards.vicapt.top/draw/qNN.html 读取真实题目。
 3. 在对话中回答该题，并返回：结果链接、题目原文、回答。
 
 无法访问页面时，如实说明失败，不要编造题目。

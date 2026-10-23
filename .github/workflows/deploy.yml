@@ -23,9 +23,11 @@ jobs:
         with:
           node-version: "20"
       # 用最终站点地址重新生成页面，保证初始页里写的是真实域名
+      # 站点地址优先取仓库变量 BASE_URL，未设置时回退到自定义域名 / 默认 Pages 域名
       - name: Build static pages
         run: |
-          node tools/build.js --base "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
+          BASE="${{ vars.BASE_URL || 'https://cards.vicapt.top' }}"
+          node tools/build.js --base "$BASE"
           node tools/check.js
       - name: Stage publish directory
         run: |

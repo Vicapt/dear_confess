@@ -116,7 +116,14 @@ async function main() {
     if (!meta) continue;
     const [, mode, sha, file] = meta;
     if (remoteBlobs.get(file) !== sha) {
-      const content = fs.readFileSync(path.join(ROOT, file));
+      // 必须从 git 对象库里取内容，而不是从工作区读文件：
+      // 工作区可能是 CRLF（core.autocrlf），而 git 存的是 LF，
+      // 两者算出的 blob sha 不同，会导致上传校验失败。
+      const content = execFileSync("git", ["cat-file", "blob", sha], {
+        cwd: ROOT,
+        encoding: "buffer",
+        maxBuffer: 64 * 1024 * 1024
+      });
       const blob = await api(tok, "POST", `/repos/${owner}/${name}/git/blobs`, {
         content: content.toString("base64"),
         encoding: "base64"

@@ -19,7 +19,7 @@
 | 结果页示例 · 问 AI 的题（第一梯队） | `https://cards.vicapt.top/draw/q07.html` |
 | 结果页示例 · 问用户的题（第一梯队） | `https://cards.vicapt.top/draw/u03.html` |
 | 结果页纯文本（第一梯队备用） | `https://cards.vicapt.top/draw/q07.txt` |
-| q 组范围（问 AI 的题） | `q01` … `q26`，每题都有 `.html` / `.txt` 两种等价形式 |
+| q 组范围（问 AI 的题） | `q01` … `q25`，每题都有 `.html` / `.txt` 两种等价形式 |
 | u 组范围（问用户的题） | `u01` … `u20`，同上 |
 
 > **入口只有一个**：把 `https://cards.vicapt.top/` 发给 AI 就行。指令里写的是
@@ -56,9 +56,9 @@
 
 - 标题为「AI 真心话扭蛋」，副标题为「让 AI 为你开启一个意想不到的话题」；
 - 页面显示的“本页面地址”是你的真实域名（不是 `example.com`）；
-- 说明文字里写的链接格式是 `https://YOUR-SITE/draw/qNN.html`，编号范围是 q01–q26；
+- 说明文字里写的链接格式是 `https://YOUR-SITE/draw/qNN.html`，编号范围是 q01–q25；
 - 初始页**没有**列出任何一道题的正文（题面只在结果页和隐藏表格里）；
-- 页脚写明「26 道「问 AI 的题」和 20 道「问用户的题」」。
+- 页脚写明「25 道「问 AI 的题」和 20 道「问用户的题」」。
 
 ### 步骤 1.5：确认两个梯队都就位
 
@@ -68,8 +68,8 @@ curl -s https://YOUR-SITE/draw/q07.html | grep -o '<p class="question">.*</p>'
 curl -s https://YOUR-SITE/draw/q07.txt  | grep '^题目：'
 curl -s https://YOUR-SITE/draw/u03.html | grep -o '<p class="question">.*</p>'
 
-# 第二梯队：隐藏表格 26 + 20 行、每行带锚点
-curl -s https://YOUR-SITE/ | grep -c 'id="row-q'    # 期望 26
+# 第二梯队：隐藏表格 25 + 20 行、每行带锚点
+curl -s https://YOUR-SITE/ | grep -c 'id="row-q'    # 期望 25
 curl -s https://YOUR-SITE/ | grep -c 'id="row-u'    # 期望 20
 
 # 指令要求「先选序号再读单行」
@@ -96,7 +96,7 @@ curl -s https://YOUR-SITE/ | grep -o '主动邀请用户'
 
 | 环节 | 成功标准 |
 | --- | --- |
-| ① 自主选题 | AI 自己选了 q01–q26 中的某个编号，而不是问用户选哪个 |
+| ① 自主选题 | AI 自己选了 q01–q25 中的某个编号，而不是问用户选哪个 |
 | ② 生成链接 | 拼出了正确的真实网址 `https://YOUR-SITE/draw/qNN.html` |
 | ③ 实际跳转 | 工具**确实请求并打开**了这个网址（不是只把链接写在回答里） |
 | ④ 读取正文 | 能提供与结果页一致的完整题目 |
@@ -221,14 +221,14 @@ node tools/check.js
 node tools/verify-consistency.js
 ```
 
-输出 `校验通过：26 个「问 AI 的题」+ 20 个「问用户的题」结果页，编号与题目一一对应且互不重复。`
-与 `核对 46 题（q 组 26 道 + u 组 20 道）： 表格 / 结果页 / txt / 题库 四者全部一致 ✓`
+输出 `校验通过：25 个「问 AI 的题」+ 20 个「问用户的题」结果页，编号与题目一一对应且互不重复。`
+与 `核对 45 题（q 组 25 道 + u 组 20 道）： 表格 / 结果页 / txt / 题库 四者全部一致 ✓`
 即说明站点结构正确；剩下的只有 AI 侧的实际访问验证。
 
 校验器还会检查：
 
 - `index.json` 与题库一一对应且**不含题面**（防止 AI 跳过访问结果页）；
-- 隐藏表格 `ai-bank` 26 行、`ai-bank ai-bank-user` 20 行，每行带 `#row-qNN` / `#row-uNN` 锚点、题目在单元格里；
+- 隐藏表格 `ai-bank` 25 行、`ai-bank ai-bank-user` 20 行，每行带 `#row-qNN` / `#row-uNN` 锚点、题目在单元格里；
 - 指令里存在「第一梯队」「第二梯队」「只读取表格中该编号所在的那一行」「不要一次性读完整张表」；
 - 指令里存在「问用户的题」「主动邀请用户」「play.html」「深度思考」；
 - `play.html` 确实读了 `index.json`、渲染了 `num-btn` 编号网格、并按编号加载对应静态文件；

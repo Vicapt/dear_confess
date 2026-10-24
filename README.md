@@ -13,7 +13,7 @@ cards/
 ├── index.html            # 初始页（含多层隐藏 AI 指令）              [生成]
 ├── play.html             # 选号页（纯前端：随机抽 + 自己挑编号）      [生成]
 ├── index.json            # 目录索引：全部编号与文件路径（不含题面）[生成]
-├── draw/q01.html ... q26.html  # 26 个「问 AI 的题」结果页        [生成]
+├── draw/q01.html ... q25.html  # 25 个/g「问 AI 的题」结果页        [生成]
 ├── draw/u01.html ... u20.html  # 20 个「问用户的题」结果页        [生成]
 ├── ai.txt                # 给 AI 的纯文本指令                       [生成]
 ├── llms.txt              # 给 AI 抓取器的站点说明                    [生成]
@@ -60,7 +60,7 @@ cards/
 
 | 题库 | 编号 | 数量 | 抽到之后 AI 该做什么 |
 | --- | --- | --- | --- |
-| **问 AI 的题** | `q01`–`q26` | 26 | AI 自己回答这道题 |
+| **问 AI 的题** | `q01`–`q25` | 25 | AI 自己回答这道题 |
 | **问用户的题** | `u01`–`u20` | 20 | AI 把题目**原样抛给用户**，然后停下等用户回答，**不许替用户答** |
 
 题面的**人称必须匹配题库**：q 组用「对方」（因为回答者是你，题目问的是 AI 眼中的你）；
@@ -152,7 +152,7 @@ npx vercel --prod
 curl -sI https://your-site/ | head -1            # 期望 200
 
 # 2. 45 个结果页全部可访问，且题目互不相同
-for i in $(seq -w 1 26); do
+for i in $(seq -w 1 25); do
   curl -s https://your-site/draw/q$i.html | grep -o '<p class="question">.*</p>'
 done
 for i in $(seq -w 1 20); do
@@ -184,7 +184,7 @@ curl -s https://your-site/play.html | grep -c 'index.json'   # 期望 >= 1
 > 结果页地址写成「你当前正在访问的这个页面的地址 + draw/qNN.html」，而不是写死域名。
 > 这样无论 AI 从哪个入口进来，拼出来的链接都指向它真正能打开的那个主机。
 
-**为什么要「先选序号、再读那一行」**：题库整张表如果一次性进上下文，26 道题全被读走，"抽卡"就没有意义了 ——
+**为什么要「先选序号、再读那一行」**：题库整张表如果一次性进上下文，25 道题全被读走，"抽卡"就没有意义了 ——
 模型可以直接从记忆里挑一题作答，你无法区分它是真的读了第 7 行还是碰巧猜中了第 7 题。
 拆成带锚点的行（`#row-q07`）+ 明确指令，把降级路径的作弊空间压到最小。
 
@@ -203,7 +203,7 @@ curl -s https://your-site/play.html | grep -c 'index.json'   # 期望 >= 1
 ```json
 {
   "count": 25,
-  "range": { "first": "q01", "last": "q26" },
+  "range": { "first": "q01", "last": "q25" },
   "items": [
     { "id": "q01", "index": 1,
       "html": "https://cards.vicapt.top/draw/q01.html",
@@ -224,7 +224,7 @@ curl -s https://your-site/play.html | grep -c 'index.json'   # 期望 >= 1
 1. **给 AI 看**：AI 读到 `index.json` 就知道有哪些编号可选、每道题的文件在哪一条路径上。它只是「菜单」，题目正文仍必须去结果页实际读取（`tools/check.js` 会断言清单里没有题面，防止 AI 跳过访问直接抄题）。
 2. **给人玩**：`play.html`（[选号页](https://cards.vicapt.top/play.html)）是纯前端实现 —— `fetch("index.json")` 拿到两套编号，然后二选一：
    - 点「随机抽一扭」→ `Math.random()` 选一个编号 → `fetch("draw/qNN.txt")` 取题并显示；
-   - **自己挑编号** → 页面渲染出两排编号按钮（q01–q26 与 u01–u20），点哪个就加载哪道题。
+   - **自己挑编号** → 页面渲染出两排编号按钮（q01–q25 与 u01–u20），点哪个就加载哪道题。
 
    加载出来的结果页地址可以一键复制发给 AI。没有后端、没有数据库、没有 API，部署到任何静态托管都能跑。
 
@@ -244,7 +244,7 @@ curl -s https://your-site/play.html | grep -c 'index.json'   # 期望 >= 1
 
 这条要求是「一起玩」的关键动作：如果 AI 答完就闭嘴，用户就只是个观众。
 
-**3. `play.html` 是那个「自己挑编号」的界面。** 两排按钮 —— q 组 q01–q26、u 组 u01–u20 —— 点哪个加载哪个结果页，再一键复制链接发给 AI。整个过程纯前端，题目从 `draw/<id>.txt` 静态镜像读出。
+**3. `play.html` 是那个「自己挑编号」的界面。** 两排按钮 —— q 组 q01–q25、u 组 u01–u20 —— 点哪个加载哪个结果页，再一键复制链接发给 AI。整个过程纯前端，题目从 `draw/<id>.txt` 静态镜像读出。
 
 ## AI 指令藏在哪里
 

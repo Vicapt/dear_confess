@@ -327,6 +327,13 @@ if (!indexHtml.includes("不要替他回答")) {
 if (!indexHtml.includes("两套彼此独立的题库")) {
   errors.push("初始页指令没有把 q 组和 u 组说成两套独立的题库");
 }
+// 人称必须写死：题面里的「对方」就是当前用户本人，否则 AI 会当成第三方
+if (!indexHtml.includes("指的就是你此刻正在对话的这个用户本人")) {
+  errors.push("初始页指令没有写明「对方」指的是当前用户本人");
+}
+if (!indexHtml.includes("回答时直接用「你」对他说")) {
+  errors.push("初始页指令没有要求 AI 用第二人称回答（不要写成「他」）");
+}
 // u 组的候选链接不能按 q 组的连续编号标注
 if (/第 \d+ 题（u\d\d）/.test(indexHtml)) {
   errors.push("初始页把 u 组链接标成了「第 N 题」，会让 AI 误以为 u 组是 q 组的延续");
@@ -378,9 +385,15 @@ const checkBank = (bank, kind) => {
       if (!/不要替用户回答|不要自己接话|等用户回答/.test(directive)) {
         errors.push(q.id + ".html 的指令没有要求 AI 等用户回答");
       }
+      if (!directive.includes("指的就是这个用户本人")) {
+        errors.push(q.id + ".html 的指令没有写明题面里的「你」指当前用户本人");
+      }
     } else {
       if (!/回答这道题|回答它/.test(directive)) {
         errors.push(q.id + ".html 的指令没有要求 AI 回答这道题");
+      }
+      if (!directive.includes("指的就是当前这个用户本人")) {
+        errors.push(q.id + ".html 的指令没有写明题面里的「对方」指当前用户本人");
       }
     }
 

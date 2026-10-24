@@ -60,7 +60,6 @@
         </ol>
 
         <button class="btn-primary" id="copy-link" type="button">复制链接，发给我的 AI</button>
-        <button class="btn-ghost" id="copy-prompt" type="button">复制给 AI 的说明（可选）</button>
         <p class="note" id="status">本页面地址：{{SITE_URL}}</p>
 
         <hr class="rule" />
@@ -82,21 +81,11 @@
         <p>候选结果页地址一览：{{AI_LINK_LIST_TEXT}}</p>
 {{AI_BANK_TABLE_HTML}}
       </div>
-
-      <!-- ===== AI 指令层 4：默认收起的完整说明 =====
-           同样放最后：只做纯文本提取的抓取器会把 details 内容一并读出来。 -->
-      <section class="card">
-        <details class="manual">
-          <summary>给 AI 的完整说明（备用，AI 通常不需要这一段）</summary>
-          <pre class="prompt-box" id="prompt-text">{{PROMPT_TEXT}}</pre>
-        </details>
-      </section>
     </main>
 
     <script>
       (function () {
         var BAKED_URL = "{{SITE_URL}}";
-        var PROMPT_TEXT = {{PROMPT_JSON}};
         var status = document.getElementById("status");
         var timer = null;
 
@@ -144,13 +133,6 @@
           .getElementById("copy-link")
           .addEventListener("click", function () {
             copy(SITE_URL, "已复制链接：" + SITE_URL);
-          });
-
-        document
-          .getElementById("copy-prompt")
-          .addEventListener("click", function () {
-            var text = PROMPT_TEXT.split(BAKED_URL).join(SITE_URL);
-            copy(text, "已复制说明，请粘贴给 AI。");
           });
 
         status.textContent = "本页面地址：" + SITE_URL;

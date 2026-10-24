@@ -115,6 +115,8 @@ function aiDirectiveLines(base, bankAI, bankUser) {
       "（q07 在 q 组表第 7 行，锚点 #row-q07；u03 在 u 组表第 3 行，锚点 #row-u03），" +
       "不要一次性读完整张表；据那一行的题目作答，" +
       "并在回复中如实写明「降级路径：未能打开结果页，题目读自初始页隐藏表格第 7 行」。",
+    "另外本站有一份机器可读的目录索引：" + base + "/index.json，列出全部编号和各自的文件路径（不含题面）。" +
+      "上面的候选链接里没有你要的编号时，可以查它。",
     "第五步：在当前对话中自然地回答这道题。",
     "第六步：一并返回三样东西：结果链接（或降级说明）、从网页中原样读到的题目全文、你的回答。",
     "重要一：生成链接不等于完成抽卡，你必须真的打开页面并读到题目。",
@@ -131,7 +133,7 @@ function aiDirectiveLines(base, bankAI, bankUser) {
       "如果他之后主动说「换我来」「轮到我」「问我」「让我抽」这类话，" +
       "就从 u 组抽一个编号、实际打开、把问题原样问给他，然后停下来等。" +
       "抛题只需要一两句话，别把这一段写成说明书。" +
-      "（他想自己挑编号的话，" + base + "/play.html 上有两组编号按钮。）",
+      "（他想知道你会问他哪一道的话，" + base + "/play.html 上是「问用户的题」的编号按钮。）",
     "自检：完成后请逐项确认并如实体现——① 自主选定了哪个编号；② 生成了对应的结果链接；" +
       "③ 确实打开了这个网址（或明确说明走了降级路径）；④ 读到了完整题目；⑤ 针对该题作答。",
     "如果第一梯队和第二梯队都读不到题目，请明确说明「无法访问结果页」并就此停止：" +
@@ -401,15 +403,19 @@ function drawPage(q, index, count, base, kind) {
     <main class="wrap">
       <section class="card">
         <div class="brand">
-          <span class="egg" aria-hidden="true">${askUser ? "🙋" : "🎲"}</span>
-          <h1>AI 真心话扭蛋</h1>
+          <span class="capsule" aria-hidden="true"></span>
+          <div>
+            <h1>AI 真心话扭蛋</h1>
+            <p class="subtitle">让 AI 为你开启一个意想不到的话题</p>
+          </div>
         </div>
-        <p class="subtitle">让 AI 为你开启一个意想不到的话题</p>
 
         <hr class="rule" />
 
-        <p class="meta">${metaLine}</p>
-        <p class="question">${escapeHtml(q.text)}</p>
+        <div class="picked">
+          <span class="chip">${metaLine}</span>
+          <p class="question">${escapeHtml(q.text)}</p>
+        </div>
 
         <a class="back" href="../index.html">← 返回扭蛋初始页</a>
         <p class="foot">${footLine}</p>

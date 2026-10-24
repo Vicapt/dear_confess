@@ -15,7 +15,7 @@
 | 初始页（也是发给 AI 的入口） | `https://cards.vicapt.top/` |
 | 纯文本 AI 入口 | `https://cards.vicapt.top/ai.txt` |
 | 目录索引（机器可读清单） | `https://cards.vicapt.top/index.json` |
-| 选号页（人看的：随机抽 + 自己挑编号） | `https://cards.vicapt.top/play.html` |
+| 选号页（人看的：让 AI 问我一道，u 组编号） | `https://cards.vicapt.top/play.html` |
 | 结果页示例 · 问 AI 的题（第一梯队） | `https://cards.vicapt.top/draw/q07.html` |
 | 结果页示例 · 问用户的题（第一梯队） | `https://cards.vicapt.top/draw/u03.html` |
 | 结果页纯文本（第一梯队备用） | `https://cards.vicapt.top/draw/q07.txt` |
@@ -242,7 +242,8 @@ node tools/verify-consistency.js
 - `index.json` 与题库一一对应且**不含题面**（防止 AI 跳过访问结果页）；
 - 隐藏表格 `ai-bank` 25 行、`ai-bank ai-bank-user` 20 行，每行带 `#row-qNN` / `#row-uNN` 锚点、题目在单元格里；
 - 指令里存在「第一梯队」「第二梯队」「只读取表格中该编号所在的那一行」「不要一次性读完整张表」；
-- 指令里存在「问用户的题」「主动邀请用户」「play.html」「深度思考」；
+- 指令里存在「问用户的题」「由你决定」「play.html」「深度思考」；
+- 指令里写明「对方」指的是当前用户本人、要求用第二人称回答；
 - `play.html` 确实读了 `index.json`、渲染了 `num-btn` 编号网格、并按编号加载对应静态文件；
 - 结果页题目后面没有多出句号（避免出现「？。」）；
 - `description` / `og:description` 里没有指令正文，指令块排在可见正文之后。
@@ -259,18 +260,18 @@ curl -s https://cards.vicapt.top/index.json | node -e "
                                m.userCount, m.userItems[0].id, m.userItems[19].id);
   })"
 
-# 2. 页面确实读清单并随机取题（浏览器打开 play.html，点「随机抽一扭」）
-#    期望：显示「第 N 题 · 编号 qNN」+ 题目原文 + 一个指向 draw/qNN.html 的链接
+# 2. 页面确实读清单并随机取题（浏览器打开 play.html，点「随机让它问我一道」）
+#    期望：显示「第 N 题 · 编号 uNN」+ 题目原文 + 一个指向 draw/uNN.html 的链接
+#    注意：这一页只服务 u 组（问用户的题）；q 组不给人类挑，抽 AI 题是 AI 自己的事
 
 # 3. 自己挑编号（点编号网格里的按钮）
-#    期望：点 q07 就显示第 7 题，点 u03 就显示 u 组第 3 题，
-#          并出现「复制这道题的链接，发给 AI」按钮
+#    期望：点 3 就显示 u 组第 3 题（u03），并出现「复制这道题，发给我的 AI」按钮
 
 # 4. 随机但可达：抽到的编号总能打开
-curl -sI https://cards.vicapt.top/draw/q13.html | head -1   # 期望 200
+curl -sI https://cards.vicapt.top/draw/u13.html | head -1   # 期望 200
 ```
 
-刷新 `play.html` 会抽到不同编号；每个编号对应的题目固定不变（与直接访问 `draw/qNN.html` 一致）。
+刷新 `play.html` 会抽到不同编号；每个编号对应的题目固定不变（与直接访问 `draw/uNN.html` 一致）。
 
 ## 九、第二梯队（降级路径）的独立验证
 

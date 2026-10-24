@@ -497,7 +497,8 @@ function main() {
   // 写法要求：第二人称、有钩子、说清玩法，不写编号和路径（那些在页面正文里）。
   const summaryText = escapeHtml(
     "把链接丢给 AI，它自己抽一道真心话再当面回答你。" +
-      "你不用出题，它也不能提前看答案 —— " + bankAI.count + " 道题里抽到哪道算哪道。"
+      "你不用出题，它也不能提前看答案 —— " +
+      bankAI.count + " 道问它的题，答完它还会反过来问你。"
   );
 
   const html = template

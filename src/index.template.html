@@ -54,8 +54,8 @@
           <li>复制下面的扭蛋链接，发送给你使用的 AI（需支持网页访问）。</li>
           <li>AI 打开链接后会自己抽卡、读题，不需要你再下指令。</li>
           <li>AI 在对话里直接回答抽到的那道题。</li>
-          <li>答完它会反过来问你：要不要也抽一个。想自己挑编号的，去
-            <a href="play.html">选号页</a>。</li>
+          <li>答完它也许会反过来抽一道问你 —— 抛不抛由它自己决定。你也可以
+            <a href="play.html">自己去选号页</a>挑编号。</li>
         </ol>
 
         <button class="btn-primary" id="copy-link" type="button">复制扭蛋链接</button>
@@ -82,7 +82,7 @@
            排在后面才不会落到"摘要"窗口里（QQ/微信链接卡片）。 -->
       <div hidden aria-hidden="true" class="ai-directive">
 {{AI_DIRECTIVE_HTML}}
-        <p>候选结果页链接（只有地址，不含题目内容，请自行挑一个打开）：</p>
+        <p>候选结果页链接（只有地址，不含题目内容；前 {{COUNT}} 个是 q 组「问 AI 的题」，后面的是 u 组「问用户的题」，请自行挑一个打开）：</p>
 {{AI_LINK_LIST_HTML}}
         <p>候选结果页地址一览：{{AI_LINK_LIST_TEXT}}</p>
 {{AI_BANK_TABLE_HTML}}

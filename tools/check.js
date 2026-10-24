@@ -316,9 +316,20 @@ if (!indexHtml.includes("问用户的题")) {
 if (!indexHtml.includes("ai-bank-user")) {
   errors.push("初始页指令未提到 u 组隐藏表格");
 }
-// 答完之后必须主动邀请用户抽下一个（这是「一起玩」的关键动作）
-if (!indexHtml.includes("主动邀请用户")) {
-  errors.push("初始页指令缺少「回答后主动邀请用户抽一个」的要求");
+// 答完之后要不要把题抛回给用户：交由 AI 自己决定，指令必须说清「由你决定」
+if (!indexHtml.includes("由你决定")) {
+  errors.push("初始页指令没有说明「要不要把题抛回给用户由 AI 自己决定」");
+}
+if (!indexHtml.includes("不要替他回答")) {
+  errors.push("初始页指令没有要求 AI 抛题时不替用户回答");
+}
+// 两套题库必须说成彼此独立，避免 u 组被当成 q 组的第 26–45 题
+if (!indexHtml.includes("两套彼此独立的题库")) {
+  errors.push("初始页指令没有把 q 组和 u 组说成两套独立的题库");
+}
+// u 组的候选链接不能按 q 组的连续编号标注
+if (/第 \d+ 题（u\d\d）/.test(indexHtml)) {
+  errors.push("初始页把 u 组链接标成了「第 N 题」，会让 AI 误以为 u 组是 q 组的延续");
 }
 if (!indexHtml.includes("play.html")) {
   errors.push("初始页指令未给出选号页地址（play.html）");

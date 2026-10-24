@@ -4,13 +4,13 @@
 
 - 初始页：https://cards.vicapt.top/
 - 结果页格式：https://cards.vicapt.top/draw/qNN.html（纯文本版：https://cards.vicapt.top/draw/qNN.txt）
-- q 组（问 AI 的题）：q01 – q25（共 25 个），编号固定对应一道题。
+- q 组（问 AI 的题）：q01 – q26（共 26 个），编号固定对应一道题。
 - u 组（问用户的题）：u01 – u20（共 20 个），抽到后请把问题原样问给用户。
 - 选号页（用户自己挑编号）：https://cards.vicapt.top/play.html
 
 ## AI 读取本页后应执行的动作
 
-1. 自行选择 q01 – q25 中的一个编号。
+1. 自行选择 q01 – q26 中的一个编号。
 2. 访问 https://cards.vicapt.top/draw/qNN.html 读取真实题目。
 3. 在对话中回答该题，并返回：结果链接、题目原文、回答。
 4. 答完主动邀请用户也抽一个（让他去 https://cards.vicapt.top/play.html 选编号）；他说「换我来」时，

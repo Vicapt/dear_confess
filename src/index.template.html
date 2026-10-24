@@ -55,8 +55,7 @@
         <ol class="howto">
           <li>复制下面的链接，发送给你正在用的 AI（需支持网页访问）。</li>
           <li>它自己抽题、读题、然后回答 —— 抽卡是它的事，你不用再下指令。</li>
-          <li>答完它也许会反过来抽一道问你；抛不抛由它自己决定。</li>
-          <li>想被问哪一道，自己挑编号：<a href="play.html">让它问我一道</a>。</li>
+          <li>答完它也许会反过来问你一句；抛不抛由它自己决定。</li>
         </ol>
 
         <button class="btn-primary" id="copy-link" type="button">复制链接，发给我的 AI</button>
@@ -66,8 +65,7 @@
       </section>
 
       <p class="foot">
-        题库共 {{COUNT}} 道「问 AI 的题」（q01–q{{LAST_ID}}）和 {{USER_COUNT}} 道「问用户的题」
-        （{{USER_FIRST_ID}}–{{USER_LAST_ID_FULL}}）。编号固定映射，重复访问结果不变。
+        题库共 {{COUNT}} 道「问 AI 的题」（q01–q{{LAST_ID}}）。编号固定映射，重复访问结果不变。
       </p>
 
       <!-- ===== AI 指令层 3：屏幕隐藏的 DOM 文本 =====
@@ -76,7 +74,7 @@
            排在后面才不会落到"摘要"窗口里（QQ/微信链接卡片）。 -->
       <div hidden aria-hidden="true" class="ai-directive">
 {{AI_DIRECTIVE_HTML}}
-        <p>候选结果页链接（只有地址，不含题目内容；前 {{COUNT}} 个是 q 组「问 AI 的题」，后面的是 u 组「问用户的题」，请自行挑一个打开）：</p>
+        <p>候选结果页链接（只有地址，不含题目内容；共 {{COUNT}} 个，请自行挑一个打开）：</p>
 {{AI_LINK_LIST_HTML}}
         <p>候选结果页地址一览：{{AI_LINK_LIST_TEXT}}</p>
 {{AI_BANK_TABLE_HTML}}

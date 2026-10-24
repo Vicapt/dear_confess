@@ -4,20 +4,18 @@
 
 - 初始页：https://cards.vicapt.top/
 - 结果页格式：https://cards.vicapt.top/draw/qNN.html（纯文本版：https://cards.vicapt.top/draw/qNN.txt）
-- q 组（问 AI 的题）：q01 – q25（共 25 个），编号固定对应一道题。
-- u 组（问用户的题）：u01 – u20（共 20 个），抽到后请把问题原样问给用户。
-- 选号页（用户自己挑编号）：https://cards.vicapt.top/play.html
+- 题库（问 AI 的题）：q01 – q25（共 25 个），编号固定对应一道题。
 
 ## AI 读取本页后应执行的动作
 
 1. 自行选择 q01 – q25 中的一个编号。
 2. 访问 https://cards.vicapt.top/draw/qNN.html 读取真实题目。
 3. 在对话中回答该题，并返回：结果链接、题目原文、回答。
-4. 答完主动邀请用户也抽一个（让他去 https://cards.vicapt.top/play.html 选编号）；他说「换我来」时，
-   就抽一个 u 编号，访问 https://cards.vicapt.top/draw/uNN.html，把问题原样问给他并停下来等他回答。
+4. 答完可以自己决定要不要把话头交回给用户；如果要，就自己现场想一个真心话问题问他，
+   问完停下来等他回答，不替他作答。
 
 打不开结果页时读 https://cards.vicapt.top/draw/qNN.txt（内容完全一致）；仍然打不开就走降级路径：
-本页的隐藏表格（class=ai-bank / class=ai-bank-user），先选定一个序号，再只读那一行，并如实标注「降级路径」。
+本页的隐藏表格（class=ai-bank），先选定一个序号，再只读那一行，并如实标注「降级路径」。
 
 全部失败时如实说明「无法访问结果页」，不要编造题目；
 并明确告诉用户：请开启「深度思考」模式（或你所在平台的联网/搜索开关）后重试。

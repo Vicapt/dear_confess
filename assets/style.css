@@ -231,22 +231,6 @@ button:active {
   box-shadow: 0 18px 32px -16px rgba(122, 92, 255, 0.9);
 }
 
-.btn-ghost {
-  display: block;
-  width: 100%;
-  margin-top: 10px;
-  padding: 11px 20px;
-  font-size: 14px;
-  color: var(--accent-ink);
-  background: var(--accent-wash);
-  border-color: transparent;
-}
-
-.btn-ghost:hover {
-  background: var(--accent-wash);
-  border-color: var(--line-strong);
-}
-
 .note {
   margin: 14px 0 0;
   font-size: 12.5px;
@@ -255,45 +239,12 @@ button:active {
   word-break: break-all;
 }
 
-.prompt-box {
-  margin: 0;
-  padding: 16px;
-  font-size: 13.5px;
-  line-height: 1.85;
-  color: var(--ink);
-  background: var(--surface-2);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
 /* 给 AI 的隐藏指令块：人眼不可见，但仍在 DOM 与源码中 */
 .ai-directive {
   display: none !important;
 }
 
-details.manual summary {
-  cursor: pointer;
-  font-size: 14px;
-  color: var(--muted);
-  font-weight: 600;
-}
-
-details.manual[open] summary {
-  margin-bottom: 12px;
-}
-
 /* ---------- 结果页 ---------- */
-.meta {
-  margin: 0;
-  font-size: 12px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--accent-ink);
-  font-weight: 700;
-}
-
 .question {
   margin: 14px 0 26px;
   font-size: 21px;
@@ -325,51 +276,6 @@ details.manual[open] summary {
   color: var(--accent-ink);
 }
 
-/* ---------- 选号界面 ---------- */
-.pick-title {
-  margin: 22px 0 4px;
-  font-size: 14px;
-  color: var(--ink);
-  font-weight: 650;
-}
-
-.num-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
-  gap: 10px;
-  margin-top: 12px;
-}
-
-.num-btn {
-  aspect-ratio: 1 / 1;
-  padding: 0;
-  font-size: 14px;
-  font-weight: 650;
-  color: var(--accent-ink);
-  background: var(--surface-2);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-}
-
-.num-btn:hover {
-  color: #fff;
-  background: linear-gradient(140deg, var(--accent) 0%, var(--accent-2) 100%);
-  border-color: transparent;
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lift);
-}
-
-.num-btn:active {
-  transform: scale(0.95);
-}
-
-.num-btn.on {
-  color: #fff;
-  background: linear-gradient(140deg, var(--accent) 0%, var(--accent-2) 100%);
-  border-color: transparent;
-  box-shadow: var(--shadow-lift);
-}
-
 /* 抽出来的题：单独一块强调区域 */
 .picked {
   margin: 18px 0 20px;
@@ -383,14 +289,6 @@ details.manual[open] summary {
 .picked .question {
   margin: 8px 0 0;
   font-size: 19px;
-}
-
-#actions {
-  margin: 4px 0 6px;
-}
-
-#actions .btn-primary {
-  margin-bottom: 12px;
 }
 
 /* 小标签 */
@@ -452,10 +350,5 @@ button[disabled] {
 
   .question {
     font-size: 18px;
-  }
-
-  .num-grid {
-    grid-template-columns: repeat(auto-fill, minmax(46px, 1fr));
-    gap: 8px;
   }
 }

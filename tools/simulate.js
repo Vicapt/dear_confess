@@ -1,4 +1,5 @@
 // 模拟一次完整的 AI 抽卡：读入口 -> 自主选题 -> 走第一梯队 -> 核对第二梯队是否一致
+// 两组题库都会各跑一轮
 const B = process.argv[2] || "https://cards.vicapt.top";
 
 async function get(u) {
@@ -12,14 +13,10 @@ async function get(u) {
   throw new Error("fail " + u);
 }
 
-(async () => {
-  const idx = await get(B + "/index.html");
-  console.log("① 入口 index.html: 读取成功");
-  console.log("   读到第一梯队指令:", idx.includes("第一梯队"));
-  console.log("   读到第二梯队指令:", idx.includes("第二梯队"));
-  console.log("   读到只读单行要求:", idx.includes("只读取表格中该编号所在的那一行"));
-
-  const pick = "q" + String(Math.floor(Math.random() * 20) + 1).padStart(2, "0");
+// 跑一组：prefix=q（问 AI 的题）/ u（问用户的题）
+async function run(idx, prefix, count) {
+  console.log("\n===== " + prefix + " 组 =====");
+  const pick = prefix + String(Math.floor(Math.random() * count) + 1).padStart(2, "0");
   console.log("② 自主选题: " + pick);
 
   // 第一梯队：真的打开结果页
@@ -42,4 +39,20 @@ async function get(u) {
   const t = txt.match(/题目：([\s\S]*)/);
   console.log("⑤ .txt 镜像: " + t[1].trim());
   console.log("   与 html 一致:", t[1].trim() === m[1]);
+}
+
+(async () => {
+  const idx = await get(B + "/index.html");
+  console.log("① 入口 index.html: 读取成功");
+  console.log("   读到第一梯队指令:", idx.includes("第一梯队"));
+  console.log("   读到第二梯队指令:", idx.includes("第二梯队"));
+  console.log("   读到只读单行要求:", idx.includes("只读取表格中该编号所在的那一行"));
+  console.log("   读到两套题库说明:", idx.includes("问用户的题"));
+  console.log("   读到主动邀请用户:", idx.includes("主动邀请用户"));
+
+  const manifest = JSON.parse(await get(B + "/index.json"));
+  console.log("   index.json: q 组 " + manifest.count + " 道，u 组 " + manifest.userCount + " 道");
+
+  await run(idx, "q", manifest.count);
+  await run(idx, "u", manifest.userCount);
 })().catch((e) => console.log("ERR", e.message));

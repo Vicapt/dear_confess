@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>随机抽一题 · AI 真心话扭蛋</title>
-    <meta name="description" content="手气测试：随手一抽，看看今天轮到哪个问题。想把同一道题丢给 AI，就复制初始页的链接发给它。" />
+    <title>抽一扭 · AI 真心话扭蛋</title>
+    <meta name="description" content="手气测试：随手一抽，或者自己挑一个编号。想把同一道题丢给 AI，就复制链接发给它。" />
     <link rel="stylesheet" href="assets/style.css" />
   </head>
 
@@ -13,17 +13,21 @@
       <section class="card">
         <div class="brand">
           <span class="egg" aria-hidden="true">🎲</span>
-          <h1>随机抽一题</h1>
+          <h1>抽一扭</h1>
         </div>
-        <p class="subtitle">纯前端随机：读目录索引 → 随机选编号 → 加载该题的静态文件</p>
+        <p class="subtitle">随机抽，或者自己挑一个编号</p>
 
         <hr class="rule" />
 
         <p class="meta" id="state">正在读取目录索引 index.json…</p>
         <p class="question" id="question" hidden></p>
         <p class="meta" id="meta" hidden></p>
+        <div id="actions" hidden>
+          <button class="btn-primary" id="copy" type="button">复制这道题的链接，发给 AI</button>
+          <a class="back" id="result-link" href="#">打开这张结果页 →</a>
+        </div>
 
-        <button class="btn-primary" id="draw" type="button" disabled>抽一扭</button>
+        <button class="btn-primary" id="draw" type="button" disabled>随机抽一扭</button>
         <a class="back" href="index.html">← 返回扭蛋初始页</a>
 
         <p class="foot">
@@ -32,6 +36,22 @@
           没有后端、没有数据库、没有 API。
         </p>
       </section>
+
+      <section class="card" id="picker-card" hidden>
+        <h2 class="section-title">自己挑一个编号</h2>
+        <p class="foot">
+          点一个编号就能看到那道题。想让 AI 答，就复制它的链接发给 AI；
+          想让它问你，就挑「问用户」那一组。
+        </p>
+
+        <h3 class="pick-title" id="pick-title-ai">问 AI 的题</h3>
+        <p class="foot">抽到哪道，AI 就答哪道。</p>
+        <div class="num-grid" id="grid-ai"></div>
+
+        <h3 class="pick-title" id="pick-title-user">问用户的题</h3>
+        <p class="foot">这一组是抛给用户回答的 —— 挑一个编号，把链接发给 AI，它会把问题原样问你。</p>
+        <div class="num-grid" id="grid-user"></div>
+      </section>
     </main>
 
     <script>
@@ -39,9 +59,15 @@
         var state = document.getElementById("state");
         var question = document.getElementById("question");
         var meta = document.getElementById("meta");
+        var actions = document.getElementById("actions");
         var drawBtn = document.getElementById("draw");
+        var copyBtn = document.getElementById("copy");
+        var resultLink = document.getElementById("result-link");
+        var pickerCard = document.getElementById("picker-card");
 
         var manifest = null;
+        var current = null; // 当前选中的条目
+        var currentUrl = "";
 
         function loadManifest() {
           // 相对路径：无论部署在哪个域名下都能找到同目录的 index.json
@@ -57,35 +83,31 @@
           return items[i];
         }
 
-        function showQuestion(item, text, srcPath) {
-          question.textContent = text;
-          question.hidden = false;
-          meta.textContent = "第 " + item.index + " 题 · 编号 " + item.id + "（共 " + manifest.count + " 题）";
-          meta.hidden = false;
-
-          var a = document.getElementById("result-link");
-          if (!a) {
-            a = document.createElement("a");
-            a.id = "result-link";
-            a.className = "back";
-            a.textContent = "打开这张结果页 →";
-            meta.parentNode.insertBefore(a, meta.nextSibling);
-          }
-          // 用相对路径，部署到任意域名下都指向同一份静态文件
-          a.href = "draw/" + item.id + ".html";
-          state.textContent = "抽到了 " + item.id + "（题目来源：" + srcPath + "）";
-        }
-
-        // 纯文本镜像的格式固定，取「题目：」之后的一行
+        // 纯文本镜像的格式固定，取「题目：」之后的内容
         function extractText(txt) {
           var m = txt.match(/题目：([\s\S]*)/);
           return m ? m[1].trim() : txt.trim();
         }
 
-        function draw() {
-          if (!manifest || !manifest.items.length) return;
-          state.textContent = "正在抽卡…";
-          var item = pickOne(manifest.items);
+        function showQuestion(item, text, srcPath, isUserBank) {
+          question.textContent = text;
+          question.hidden = false;
+          meta.textContent =
+            "第 " + item.index + " 题 · 编号 " + item.id +
+            (isUserBank ? "（这一题问用户）" : "");
+          meta.hidden = false;
+          actions.hidden = false;
+
+          current = item;
+          // 用相对路径，部署到任意域名下都指向同一份静态文件
+          currentUrl = new URL("draw/" + item.id + ".html", location.href).href;
+          resultLink.href = "draw/" + item.id + ".html";
+          state.textContent = "选中了 " + item.id + "（题目来源：" + srcPath + "）";
+        }
+
+        function load(item, isUserBank) {
+          if (!item) return;
+          state.textContent = "正在读取…";
           var srcPath = "draw/" + item.id + ".txt";
           fetch(srcPath, { cache: "no-cache" })
             .then(function (r) {
@@ -93,11 +115,71 @@
               return r.text();
             })
             .then(function (txt) {
-              showQuestion(item, extractText(txt), srcPath);
+              showQuestion(item, extractText(txt), srcPath, isUserBank);
             })
             .catch(function (err) {
               state.textContent = "读取失败：" + err.message + "（如果用 file:// 直接打开，请改用本地服务器）";
             });
+        }
+
+        function draw() {
+          if (!manifest || !manifest.items.length) return;
+          load(pickOne(manifest.items), false);
+        }
+
+        // 编号按钮：用户自己挑一个号
+        function buildGrid(container, items, isUserBank) {
+          container.textContent = "";
+          items.forEach(function (item) {
+            var b = document.createElement("button");
+            b.type = "button";
+            b.className = "num-btn";
+            b.textContent = String(item.index);
+            b.title = "第 " + item.index + " 题（" + item.id + "）";
+            b.setAttribute("aria-label", b.title);
+            b.addEventListener("click", function () {
+              load(item, isUserBank);
+              if (window.scrollTo) window.scrollTo({ top: 0, behavior: "smooth" });
+            });
+            container.appendChild(b);
+          });
+        }
+
+        copyBtn.addEventListener("click", function () {
+          if (!currentUrl) return;
+          var done = function () {
+            copyBtn.textContent = "已复制 ✓";
+            setTimeout(function () {
+              copyBtn.textContent = "复制这道题的链接，发给 AI";
+            }, 1800);
+          };
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(currentUrl).then(done, function () {
+              fallbackCopy();
+            });
+          } else {
+            fallbackCopy();
+          }
+        });
+
+        function fallbackCopy() {
+          var ta = document.createElement("textarea");
+          ta.value = currentUrl;
+          ta.setAttribute("readonly", "");
+          ta.style.position = "fixed";
+          ta.style.opacity = "0";
+          document.body.appendChild(ta);
+          ta.select();
+          try {
+            document.execCommand("copy");
+            copyBtn.textContent = "已复制 ✓";
+            setTimeout(function () {
+              copyBtn.textContent = "复制这道题的链接，发给 AI";
+            }, 1800);
+          } catch (e) {
+            state.textContent = "复制失败，请手动复制：" + currentUrl;
+          }
+          document.body.removeChild(ta);
         }
 
         drawBtn.addEventListener("click", draw);
@@ -107,7 +189,17 @@
             manifest = m;
             drawBtn.disabled = false;
             state.textContent =
-              "已读取目录索引：共 " + m.count + " 题（" + m.range.first + " – " + m.range.last + "）。点「抽一扭」开始。";
+              "已读取目录索引：问 AI 的题 " + m.count + " 道（" + m.range.first + " – " + m.range.last +
+              "），问用户的题 " + m.userCount + " 道（" + m.userRange.first + " – " + m.userRange.last +
+              "）。点「随机抽一扭」，或者在下面自己挑编号。";
+
+            document.getElementById("pick-title-ai").textContent =
+              "问 AI 的题（" + m.count + " 道）";
+            document.getElementById("pick-title-user").textContent =
+              "问用户的题（" + m.userCount + " 道）";
+            buildGrid(document.getElementById("grid-ai"), m.items, false);
+            buildGrid(document.getElementById("grid-user"), m.userItems, true);
+            pickerCard.hidden = false;
           })
           .catch(function (err) {
             state.textContent = "读取 index.json 失败：" + err.message + "（如果用 file:// 直接打开，请改用本地服务器）";

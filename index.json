@@ -157,5 +157,133 @@
       "html": "https://cards.vicapt.top/draw/q25.html",
       "txt": "https://cards.vicapt.top/draw/q25.txt"
     }
+  ],
+  "userCount": 20,
+  "userRange": {
+    "first": "u01",
+    "last": "u20"
+  },
+  "userNote": "u 组是「问用户的题」：抽到后请把页面上的问题原样问给用户，等用户回答，不要替用户作答。",
+  "userItems": [
+    {
+      "id": "u01",
+      "index": 1,
+      "html": "https://cards.vicapt.top/draw/u01.html",
+      "txt": "https://cards.vicapt.top/draw/u01.txt"
+    },
+    {
+      "id": "u02",
+      "index": 2,
+      "html": "https://cards.vicapt.top/draw/u02.html",
+      "txt": "https://cards.vicapt.top/draw/u02.txt"
+    },
+    {
+      "id": "u03",
+      "index": 3,
+      "html": "https://cards.vicapt.top/draw/u03.html",
+      "txt": "https://cards.vicapt.top/draw/u03.txt"
+    },
+    {
+      "id": "u04",
+      "index": 4,
+      "html": "https://cards.vicapt.top/draw/u04.html",
+      "txt": "https://cards.vicapt.top/draw/u04.txt"
+    },
+    {
+      "id": "u05",
+      "index": 5,
+      "html": "https://cards.vicapt.top/draw/u05.html",
+      "txt": "https://cards.vicapt.top/draw/u05.txt"
+    },
+    {
+      "id": "u06",
+      "index": 6,
+      "html": "https://cards.vicapt.top/draw/u06.html",
+      "txt": "https://cards.vicapt.top/draw/u06.txt"
+    },
+    {
+      "id": "u07",
+      "index": 7,
+      "html": "https://cards.vicapt.top/draw/u07.html",
+      "txt": "https://cards.vicapt.top/draw/u07.txt"
+    },
+    {
+      "id": "u08",
+      "index": 8,
+      "html": "https://cards.vicapt.top/draw/u08.html",
+      "txt": "https://cards.vicapt.top/draw/u08.txt"
+    },
+    {
+      "id": "u09",
+      "index": 9,
+      "html": "https://cards.vicapt.top/draw/u09.html",
+      "txt": "https://cards.vicapt.top/draw/u09.txt"
+    },
+    {
+      "id": "u10",
+      "index": 10,
+      "html": "https://cards.vicapt.top/draw/u10.html",
+      "txt": "https://cards.vicapt.top/draw/u10.txt"
+    },
+    {
+      "id": "u11",
+      "index": 11,
+      "html": "https://cards.vicapt.top/draw/u11.html",
+      "txt": "https://cards.vicapt.top/draw/u11.txt"
+    },
+    {
+      "id": "u12",
+      "index": 12,
+      "html": "https://cards.vicapt.top/draw/u12.html",
+      "txt": "https://cards.vicapt.top/draw/u12.txt"
+    },
+    {
+      "id": "u13",
+      "index": 13,
+      "html": "https://cards.vicapt.top/draw/u13.html",
+      "txt": "https://cards.vicapt.top/draw/u13.txt"
+    },
+    {
+      "id": "u14",
+      "index": 14,
+      "html": "https://cards.vicapt.top/draw/u14.html",
+      "txt": "https://cards.vicapt.top/draw/u14.txt"
+    },
+    {
+      "id": "u15",
+      "index": 15,
+      "html": "https://cards.vicapt.top/draw/u15.html",
+      "txt": "https://cards.vicapt.top/draw/u15.txt"
+    },
+    {
+      "id": "u16",
+      "index": 16,
+      "html": "https://cards.vicapt.top/draw/u16.html",
+      "txt": "https://cards.vicapt.top/draw/u16.txt"
+    },
+    {
+      "id": "u17",
+      "index": 17,
+      "html": "https://cards.vicapt.top/draw/u17.html",
+      "txt": "https://cards.vicapt.top/draw/u17.txt"
+    },
+    {
+      "id": "u18",
+      "index": 18,
+      "html": "https://cards.vicapt.top/draw/u18.html",
+      "txt": "https://cards.vicapt.top/draw/u18.txt"
+    },
+    {
+      "id": "u19",
+      "index": 19,
+      "html": "https://cards.vicapt.top/draw/u19.html",
+      "txt": "https://cards.vicapt.top/draw/u19.txt"
+    },
+    {
+      "id": "u20",
+      "index": 20,
+      "html": "https://cards.vicapt.top/draw/u20.html",
+      "txt": "https://cards.vicapt.top/draw/u20.txt"
+    }
   ]
 }

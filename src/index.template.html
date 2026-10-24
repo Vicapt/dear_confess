@@ -54,6 +54,8 @@
           <li>复制下面的扭蛋链接，发送给你使用的 AI（需支持网页访问）。</li>
           <li>AI 打开链接后会自己抽卡、读题，不需要你再下指令。</li>
           <li>AI 在对话里直接回答抽到的那道题。</li>
+          <li>答完它会反过来问你：要不要也抽一个。想自己挑编号的，去
+            <a href="play.html">选号页</a>。</li>
         </ol>
 
         <button class="btn-primary" id="copy-link" type="button">复制扭蛋链接</button>
@@ -62,15 +64,16 @@
 
         <p class="foot">
           想先自己随机抽一题看效果？
-          <a href="play.html">打开随机抽卡页</a>
-          （纯前端随机：读 <code>index.json</code> 目录索引 → 随机选编号 → 取对应的静态题目文件）
+          <a href="play.html">打开选号页</a>
+          （纯前端随机 + 自己挑编号：读 <code>index.json</code> 目录索引 → 选编号 → 取对应的静态题目文件）
         </p>
 
         <hr class="rule" />
       </section>
 
       <p class="foot">
-        题库共 {{COUNT}} 道题，编号 q01–q{{LAST_ID}}，固定映射，重复访问结果不变。
+        题库共 {{COUNT}} 道「问 AI 的题」（q01–q{{LAST_ID}}）和 {{USER_COUNT}} 道「问用户的题」
+        （{{USER_FIRST_ID}}–{{USER_LAST_ID_FULL}}）。编号固定映射，重复访问结果不变。
       </p>
 
       <!-- ===== AI 指令层 3：屏幕隐藏的 DOM 文本 =====

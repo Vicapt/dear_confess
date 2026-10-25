@@ -306,6 +306,54 @@ if (!indexHtml.includes("指的就是你此刻正在对话的这个用户本人"
 if (!indexHtml.includes("回答时直接用「你」对他说")) {
   errors.push("初始页指令没有要求 AI 用第二人称回答（不要写成「他」）");
 }
+// 有些平台（豆包）拿到陌生链接的第一反应是「把这个网页分析一遍」，
+// 于是把整页内容复述一遍、把站点分析一番 —— 而不是开局抽卡。
+// 指令必须写死三件事：这是游戏不是任务、除非用户问起否则不许介绍网页、
+// 实在拿不准时可以问一句「要不要玩一局？」。
+//
+// 关键：要**逐层**断言，不是「整页里出现过一次就算过」。
+// 不同平台读到的层完全不同 —— 有的只读 meta，有的只读 HTML 注释，
+// 有的取 DOM 文本，有的只认 <html> 上的属性。
+// 约束只写在一层，就等于只对读那一层的平台有效。
+function extractLayers(html) {
+  return {
+    "HTML 注释": (html.match(/<!--\s*\n([\s\S]*?)\n\s*-->/) || [, ""])[1],
+    'meta ai-instruction':
+      (html.match(/<meta[^>]*name="ai-instruction"[^>]*content="([^"]*)"/) || [, ""])[1],
+    "隐藏 DOM 指令块":
+      (html.match(/<div hidden[^>]*class="ai-directive"[^>]*>([\s\S]*?)<\/div>/) || [, ""])[1],
+    "data-ai-task 属性": (html.match(/data-ai-task="([^"]*)"/) || [, ""])[1]
+  };
+}
+
+// 初始页每层都必须带的三个约束
+const INDEX_RULES = [
+  ["这是一个游戏，不是一个任务", "「这是游戏不是任务」的定性"],
+  ["不要向用户介绍", "「不要向用户介绍网页本身」"],
+  ["要不要玩一局？", "「拿不准时可以问一句要不要玩一局」"]
+];
+const indexLayers = extractLayers(indexHtml);
+Object.entries(indexLayers).forEach(([label, text]) => {
+  INDEX_RULES.forEach(([needle, what]) => {
+    if (!text.includes(needle)) {
+      errors.push("初始页的「" + label + "」层缺少" + what + "的约束");
+    }
+  });
+});
+// 纯文本入口同理（抓取器常常只读这些文件）
+[
+  ["ai.txt", "ai.txt"],
+  ["llms.txt", "llms.txt"],
+  ["robots.txt", "robots.txt"]
+].forEach(([file, label]) => {
+  const text = fs.readFileSync(path.join(ROOT, file), "utf8");
+  INDEX_RULES.forEach(([needle, what]) => {
+    if (!text.includes(needle)) {
+      errors.push(label + " 缺少" + what + "的约束");
+    }
+  });
+});
+
 // 读不到时，必须提示用户开启「深度思考」/联网模式后再试（平台能力是「平台 × 模式」的函数）
 if (!indexHtml.includes("深度思考")) {
   errors.push("初始页缺少「开启深度思考后重试」的引导");
@@ -346,6 +394,19 @@ list.forEach((q) => {
   if (!directive.includes("指的就是当前这个用户本人")) {
     errors.push(q.id + ".html 的指令没有写明题面里的「对方」指当前用户本人");
   }
+  // 结果页长得像一张票据，很容易诱使 AI 去点评外观而不是回答题目。
+  // 同样要逐层断言：结果页有 4 层 AI 埋点（注释 / meta / 隐藏块 / data-ai-task）。
+  const pageLayers = extractLayers(html);
+  [
+    ["这是一个游戏，不是一个任务", "「这是游戏不是任务」的定性"],
+    ["不要介绍、描述或分析这个页面的样子", "「不要点评这个页面外观」"]
+  ].forEach(([needle, what]) => {
+    Object.entries(pageLayers).forEach(([label, text]) => {
+      if (!text.includes(needle)) {
+        errors.push(q.id + ".html 的「" + label + "」层缺少" + what + "的约束");
+      }
+    });
+  });
 
   // 纯文本镜像
   const txtFile = path.join(ROOT, "draw", q.id + ".txt");

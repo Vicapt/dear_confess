@@ -264,6 +264,22 @@ if (!domText(indexHtml).includes("请立即自行完成一次 AI 真心话扭蛋
 if (!domText(indexHtml).includes("/draw/q")) {
   errors.push("初始页的纯文本层读不到结果链接格式");
 }
+// 复制按钮复制出去的必须是「一句邀请 + 链接」，不能是裸链接。
+// 裸链接扔给 AI，它多半当成一份「待分析的资料」；前缀一句「来抽一题真心话」，
+// 对方才知道这是要它陪你玩。
+//
+// 注意：这里必须断言**复制按钮的实际赋值**，不能断言「整页里出现过这句话」——
+// 「来抽一题真心话」这六个字在指令正文里也出现（用来解释它该怎么理解），
+// 所以整页 includes 是空断言：把复制按钮改回裸链接，它照样通过。
+const copyTextMatch = indexHtml.match(/var\s+COPY_TEXT\s*=\s*([^;]+);/);
+if (!copyTextMatch) {
+  errors.push("初始页的脚本里找不到 COPY_TEXT（复制出去的内容没有写死）");
+} else if (!/^"来抽一题真心话\\n"\s*\+\s*SITE_URL$/.test(copyTextMatch[1].trim())) {
+  errors.push(
+    "初始页的复制按钮复制出去的不是「来抽一题真心话 + 链接」，实际是：" +
+      copyTextMatch[1].trim()
+  );
+}
 // 指令必须自带「以实际访问到的地址为准」的兜底，防止旧缓存里的占位域名误导 AI
 if (!indexHtml.includes("一切以你实际访问到的地址为准")) {
   errors.push("初始页缺少「以你实际访问到的地址为准」的兜底说明");
@@ -353,6 +369,19 @@ Object.entries(indexLayers).forEach(([label, text]) => {
     }
   });
 });
+
+// 「来抽一题真心话 + 链接」这句话必须被明确解释成「请你开局抽卡」，
+// 否则 AI 可能把它误读成「反过来问我一道题」（指令里的「重要三」），
+// 于是礼貌地反问用户一句，什么也没抽到。
+// 这句话同样要**逐层**出现：只写在一层，就只对读那一层的平台有效。
+Object.entries(indexLayers).forEach(([label, text]) => {
+  if (!text.includes("那是在请你开局抽卡")) {
+    errors.push("初始页的「" + label + "」层没有说明「来抽一题真心话 + 链接」是在请你开局抽卡");
+  }
+});
+if (!fs.readFileSync(path.join(ROOT, "ai.txt"), "utf8").includes("那是在请你开局抽卡")) {
+  errors.push("ai.txt 没有说明「来抽一题真心话 + 链接」是在请你开局抽卡");
+}
 
 // 读不到时，必须提示用户开启「深度思考」/联网模式后再试（平台能力是「平台 × 模式」的函数）
 if (!indexHtml.includes("深度思考")) {

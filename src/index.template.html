@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>AI 真心话扭蛋</title>
+    <title>AI 真心话扭蛋 — 它到底怎么看你？</title>
 
     <!-- ===== AI 指令层 1：HTML 注释（人眼不可见，读取源码的 AI 可直接获得） ===== -->
     <!--
@@ -20,53 +20,192 @@
     -->
     <meta name="description" content="{{AI_SUMMARY_TEXT}}" />
     <meta name="ai-instruction" content="{{AI_META_TEXT}}" />
-    <meta property="og:title" content="AI 真心话扭蛋" />
+    <meta property="og:title" content="AI 真心话扭蛋 — 它到底怎么看你？" />
     <meta property="og:description" content="{{AI_SUMMARY_TEXT}}" />
     <meta property="og:url" content="{{SITE_URL}}" />
 
-    <link rel="stylesheet" href="assets/style.css" />
+    <!-- 字体导入 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Noto+Serif+SC:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 
-    <!--
-      版式说明（放在 head 里，别放 body 开头）：
-      可见正文排在最前，AI 指令块一律挪到 body 末尾。
-      原因：聊天软件（QQ / 微信等）的链接卡片会抓 description / og:description，
-      有的还会取正文纯文本的前若干字符。指令排在前面就会被当成"摘要"展示给人类。
-      body 开头的空行同理：只取"开头若干行"的抓取器会先读到空白。
-    -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'],
+              serif: ['Noto Serif SC', 'Georgia', 'serif'],
+              mono: ['Space Mono', 'monospace'],
+            },
+            colors: {
+              oatmeal: '#FBF9F5',
+              chalk: '#FFFFFF',
+              charcoal: '#211E1C',
+              stoneMuted: '#7E766F',
+              terracotta: '#C86843',
+              terracottaDark: '#AC5331',
+              brassBorder: 'rgba(33, 30, 28, 0.08)',
+            }
+          }
+        }
+      }
+    </script>
+
+    <style>
+      /* 细腻哑光纸质底 */
+      .bg-paper {
+        background-color: #F8F6F1;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+      }
+
+      /* 精工同心圆拉丝金属旋钮 */
+      .brushed-metal {
+        background: conic-gradient(
+          from 215deg,
+          #dfd7cd 0deg,
+          #f4eee6 45deg,
+          #c9beb0 90deg,
+          #fbf8f3 135deg,
+          #d6ccc0 180deg,
+          #f2ece3 225deg,
+          #beaf9f 270deg,
+          #f9f6f0 315deg,
+          #dfd7cd 360deg
+        );
+        box-shadow:
+          0 1px 1px rgba(255, 255, 255, 0.9) inset,
+          0 12px 28px -6px rgba(70, 50, 40, 0.2),
+          0 4px 10px rgba(0, 0, 0, 0.05);
+      }
+
+      /* 旋钮外周机械沉头座 */
+      .knob-bezel {
+        background: linear-gradient(145deg, #e7e0d6, #ffffff);
+        box-shadow:
+          inset 0 2px 4px rgba(0, 0, 0, 0.08),
+          0 1px 2px rgba(255, 255, 255, 0.8);
+      }
+
+      /* 极简同心轴心内凹效果 */
+      .knob-core {
+        background: radial-gradient(circle at 40% 40%, #ffffff 0%, #ebe5dc 70%, #dfd6ca 100%);
+        box-shadow:
+          inset 0 1.5px 3px rgba(0, 0, 0, 0.12),
+          0 1px 2px rgba(255, 255, 255, 0.9);
+      }
+
+      /* 旋钮物理转动阻尼动画 */
+      .knob-transition {
+        transition: transform 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+    </style>
   </head>
 
-  <body>
+  <body class="bg-paper text-charcoal font-sans antialiased min-h-screen flex flex-col justify-between p-4 sm:p-8 selection:bg-terracotta/15 selection:text-terracotta">
 
+    <!-- 主视口卡片 -->
+    <main class="w-full max-w-[480px] mx-auto my-auto py-2">
 
+      <!-- 顶部：强有力的受众钩子 -->
+      <header class="text-center mb-7">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-brassBorder bg-white/70 text-[11px] font-mono text-terracotta tracking-wider uppercase mb-3.5 shadow-sm">
+          <span class="w-1.5 h-1.5 rounded-full bg-terracotta animate-pulse"></span>
+          <span>HUMAN × AI DIALOGUE</span>
+        </div>
 
-    <main class="wrap">
-      <section class="card">
-        <div class="brand">
-          <span class="capsule" aria-hidden="true"></span>
-          <div>
-            <h1>AI 真心话扭蛋</h1>
-            <p class="subtitle">让它替你抽一道真心话，然后当面回答你</p>
+        <h1 class="text-2xl sm:text-3xl font-serif font-normal text-charcoal tracking-tight leading-snug mb-2.5">
+          你聊了那么久的 AI，<br>
+          <span class="font-medium text-terracotta">到底是怎么看你的？</span>
+        </h1>
+
+        <p class="text-stoneMuted text-xs sm:text-sm font-light leading-relaxed max-w-sm mx-auto">
+          25 道藏在代码深处的真心话。<br>
+          拧动旋钮取走链接，看它当面抽出一句对你的坦白。
+        </p>
+      </header>
+
+      <!-- 卡片主体 -->
+      <section class="bg-chalk rounded-3xl p-7 sm:p-9 border border-brassBorder shadow-[0_8px_32px_rgba(45,35,30,0.04)] relative">
+
+        <!-- 核心交互区：纯粹的极简实体金属旋钮 -->
+        <div class="flex flex-col items-center justify-center my-4 select-none">
+          <div class="relative w-48 h-48 flex items-center justify-center">
+
+            <!-- 极简外周沉台同心外环 -->
+            <div class="absolute inset-0 rounded-full border border-stone-200/50 bg-stone-100/30"></div>
+
+            <!-- 旋钮外圈机械沉孔座 -->
+            <div class="w-36 h-36 rounded-full knob-bezel p-1.5 flex items-center justify-center z-10">
+
+              <!-- 旋钮本体（点击拧动并复制链接） -->
+              <button
+                id="knob-button"
+                type="button"
+                class="knob-transition w-full h-full rounded-full brushed-metal border border-white/80 flex flex-col items-center justify-between p-3.5 cursor-pointer outline-none relative group active:scale-95 transition-transform"
+                title="拧动旋钮，复制链接"
+              >
+                <!-- 顶部机械定向槽点 -->
+                <div class="w-1.5 h-3.5 rounded-full bg-terracotta border border-white/70 shadow-sm mt-0.5 group-hover:bg-terracottaDark transition-colors"></div>
+
+                <!-- 旋钮轴心 -->
+                <div class="w-11 h-11 rounded-full knob-core border border-stone-200/70 flex items-center justify-center">
+                  <div class="w-3 h-3 rounded-full bg-stone-300/40 border border-stone-400/20"></div>
+                </div>
+
+                <!-- 旋钮底部微盲条纹 -->
+                <div class="w-3 h-0.5 rounded-full bg-stone-400/30 mb-0.5"></div>
+              </button>
+            </div>
+          </div>
+
+          <!-- 旋钮下方直接提示"可复制链接" -->
+          <p id="knob-hint" class="mt-3 text-xs font-medium text-stoneMuted tracking-wide flex items-center gap-1.5 cursor-pointer hover:text-charcoal transition-colors">
+            <span class="text-terracotta">↻</span> 拧动旋钮 · 复制链接
+          </p>
+        </div>
+
+        <!-- 极简使用说明 -->
+        <div class="mt-6 pt-5 border-t border-stone-100 space-y-2.5 text-xs text-charcoal/85 font-light">
+          <div class="flex items-center gap-2.5">
+            <span class="font-mono text-[11px] text-terracotta font-semibold">01</span>
+            <p>拧动上方旋钮，链接即刻存入剪贴板。</p>
+          </div>
+          <div class="flex items-center gap-2.5">
+            <span class="font-mono text-[11px] text-terracotta font-semibold">02</span>
+            <p>直接发给陪你聊天的 AI（<strong>无需附加额外指令</strong>）。</p>
+          </div>
+          <div class="flex items-center gap-2.5">
+            <span class="font-mono text-[11px] text-terracotta font-semibold">03</span>
+            <p>静候它自己选定一道题，当面把心里话说给你听。</p>
           </div>
         </div>
 
-        <hr class="rule" />
+        <!-- 备用长条触发按钮与状态回执 -->
+        <div class="mt-6 pt-2">
+          <button
+            id="copy-link"
+            type="button"
+            class="w-full py-3.5 px-4 rounded-xl bg-charcoal hover:bg-black text-oatmeal font-medium text-xs tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99] shadow-sm"
+          >
+            <svg class="w-3.5 h-3.5 text-stone-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            <span id="btn-text">直接复制链接发给它</span>
+          </button>
 
-        <h2 class="section-title">玩法</h2>
-        <ol class="howto">
-          <li>复制下面的链接，发给你正在用的 AI（它需要能访问网页）。</li>
-          <li>它自己抽题、读题、然后回答 —— 抽卡是它的事，你不用再下指令。</li>
-          <li>答完它也许会反过来问你一句；抛不抛由它自己决定。</li>
-        </ol>
+          <p id="status" class="mt-2.5 text-center text-[11px] font-mono text-stoneMuted/80 transition-all duration-300">
+            {{SITE_URL}}
+          </p>
+        </div>
 
-        <button class="btn-primary" id="copy-link" type="button">复制链接，发给我的 AI</button>
-        <p class="note" id="status">本页面地址：{{SITE_URL}}</p>
-
-        <hr class="rule" />
       </section>
 
-      <p class="foot">
-        题库共 {{COUNT}} 道「问 AI 的题」（q01–q{{LAST_ID}}）。同一个编号永远是同一道题，反复打开也不变。
-      </p>
+      <!-- 底部标语 -->
+      <footer class="mt-6 text-center">
+        <p class="text-[11px] font-light text-stoneMuted/70">
+          全站共 {{COUNT}} 道关于性格、默契与偏好的切片。纯净无登录。
+        </p>
+      </footer>
 
       <!-- ===== AI 指令层 3：屏幕隐藏的 DOM 文本 =====
            人类看不到，但 DOM / 源码 / 纯文本提取都能读到。
@@ -81,14 +220,18 @@
       </div>
     </main>
 
+    <!-- 交互脚本：旋钮物理转动 + 自动复制 -->
     <script>
       (function () {
         var BAKED_URL = "{{SITE_URL}}";
         var status = document.getElementById("status");
+        var copyBtn = document.getElementById("copy-link");
+        var btnText = document.getElementById("btn-text");
+        var knobBtn = document.getElementById("knob-button");
+        var knobHint = document.getElementById("knob-hint");
         var timer = null;
+        var currentRotation = 0;
 
-        // 实际地址优先用当前页面地址（部署到别处也不会复制到过期域名），
-        // 退化时用构建时写入的地址。
         var SITE_URL = BAKED_URL;
         if (location.protocol === "http:" || location.protocol === "https:") {
           SITE_URL =
@@ -96,19 +239,41 @@
             location.pathname.replace(/\/index\.html$/, "/").replace(/\/$/, "/");
         }
 
+        // 旋钮物理转动并复制
+        function handleTwistAndCopy() {
+          // 每次旋转 90° 到 135°，形成手感反馈
+          currentRotation += 90 + Math.floor(Math.random() * 45);
+          knobBtn.style.transform = "rotate(" + currentRotation + "deg)";
+
+          // 复制链接
+          copy(SITE_URL, "✨ 链接已复制！直接粘贴给它，看它怎么回你");
+        }
+
         function copy(text, okMessage) {
           function done() {
             status.textContent = okMessage;
+            status.classList.add("text-terracotta", "font-medium");
+            status.classList.remove("text-stoneMuted/80");
+
+            btnText.textContent = "已存入剪贴板 · 快去发它";
+            knobHint.innerHTML = "<span class='text-terracotta'>✓</span> 链接已复制，快发给它吧";
+
             if (timer) clearTimeout(timer);
             timer = setTimeout(function () {
-              status.textContent = "本页面地址：" + SITE_URL;
-            }, 2400);
+              status.textContent = SITE_URL;
+              status.classList.remove("text-terracotta", "font-medium");
+              status.classList.add("text-stoneMuted/80");
+              btnText.textContent = "直接复制链接发给它";
+              knobHint.innerHTML = "<span class='text-terracotta'>↻</span> 拧动旋钮 · 复制链接";
+            }, 3000);
           }
+
           if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(text).then(done, fallback);
           } else {
             fallback();
           }
+
           function fallback() {
             var ta = document.createElement("textarea");
             ta.value = text;
@@ -121,19 +286,20 @@
               document.execCommand("copy");
               done();
             } catch (e) {
-              status.textContent = "复制失败，请手动选取文本复制。";
+              status.textContent = "复制失败，请手动选取地址长按复制。";
             }
             document.body.removeChild(ta);
           }
         }
 
-        document
-          .getElementById("copy-link")
-          .addEventListener("click", function () {
-            copy(SITE_URL, "已复制链接：" + SITE_URL);
-          });
+        // 点击旋钮或提示文案触发
+        knobBtn.addEventListener("click", handleTwistAndCopy);
+        if (knobHint) knobHint.addEventListener("click", handleTwistAndCopy);
 
-        status.textContent = "本页面地址：" + SITE_URL;
+        // 备用长条按钮
+        copyBtn.addEventListener("click", handleTwistAndCopy);
+
+        status.textContent = SITE_URL;
       })();
     </script>
   </body>

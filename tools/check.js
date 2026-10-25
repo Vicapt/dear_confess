@@ -24,6 +24,23 @@ const errors = [];
 const firstId = list[0].id;
 const lastId = list[list.length - 1].id;
 
+// 从结果页 HTML 里取出题面：h2.question 去掉标签与实体后的纯文本。
+// 题目里可能有 <span> 之类的行内标签（色号会加等宽样式），
+// 比对时要按「人能读到的文字」来比，而不是按标记比。
+function questionText(html) {
+  const m = html.match(/<h2[^>]*class="[^"]*\bquestion\b[^"]*"[^>]*>([\s\S]*?)<\/h2>/);
+  if (!m) return null;
+  return m[1]
+    .replace(/<[^>]+>/g, "")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&amp;/g, "&")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 if (!list.length) errors.push("questions.json 里没有「问 AI 的题」");
 
 if (!indexHtml.includes(firstId) || !indexHtml.includes(lastId)) {
@@ -33,7 +50,9 @@ if (!indexHtml.includes(firstId) || !indexHtml.includes(lastId)) {
 if (!indexHtml.includes(firstId + "–" + lastId)) {
   errors.push("index.html 未使用当前题号范围 " + firstId + "–" + lastId + "（疑似写死）");
 }
-if (!indexHtml.includes("题库共 " + list.length + " 道")) {
+// 人看到的题目总数必须和题库一致。
+// 只锚「共 N 道」这半句，前面的措辞（题库共 / 全站共）允许随文案改。
+if (!indexHtml.includes("共 " + list.length + " 道")) {
   errors.push("index.html 的题库总数与题库不一致（应为 " + list.length + "）");
 }
 if (!indexHtml.includes("/draw/")) {
@@ -205,13 +224,13 @@ if (!indexHtml.includes("index.json")) {
       const page = path.join(ROOT, "draw", q.id + ".html");
       if (!fs.existsSync(page)) return;
       const pageHtml = fs.readFileSync(page, "utf8");
-      const m = pageHtml.match(/<p class="question">([\s\S]*?)<\/p>/);
-      if (!m) {
-        errors.push(q.id + ".html 缺少 .question 题目段落");
+      const pageQ = questionText(pageHtml);
+      if (!pageQ) {
+        errors.push(q.id + ".html 缺少 .question 题面");
         return;
       }
-      if (m[1] !== q.text) {
-        errors.push(q.id + ".html 的题目段落与题库不一致");
+      if (pageQ !== q.text) {
+        errors.push(q.id + ".html 的题面与题库不一致");
       }
       const row = table.match(
         new RegExp('<tr id="row-' + q.id + '">([\\s\\S]*?)</tr>')
@@ -344,10 +363,11 @@ list.forEach((q) => {
     }
   }
 
-  // 题目正文直接写在 HTML 里（不是 JS 变量），因此不应出现在 <script> 中
-  const bodyScript = html.split("<script")[1];
-  if (bodyScript && bodyScript.includes(q.text)) {
-    errors.push(q.id + ".html 的题目似乎只在脚本中生成");
+  // 题目正文必须直接写在 HTML 里（不是 JS 变量拼出来的）。
+  // 页面里确实有一个 <script>（复制按钮用），所以这里看的是「去掉脚本后的正文」里有没有题面。
+  const noScript = html.replace(/<script[\s\S]*?<\/script>/gi, "");
+  if (!questionText(noScript)) {
+    errors.push(q.id + ".html 的题面似乎只在脚本中生成");
   }
   // 题目本身以「？」结尾，指令里不要再补句号（否则出现「？。」）
   if (html.includes(q.text + "。")) {
@@ -370,6 +390,37 @@ if (files.length !== list.length) {
 const strayFiles = fs.readdirSync(path.join(ROOT, "draw"));
 if (strayFiles.some((f) => /^u\d\d\./.test(f))) {
   errors.push("draw/ 目录仍残留 u 组结果页");
+}
+
+// 本地预览服务器的 MIME 表必须和线上（GitHub Pages）一致。
+// 不一致的话本地预览会在某个维度上骗人：比如 .txt 兜底成 octet-stream 后，
+// 浏览器会当二进制触发下载，而不是显示纯文本。
+{
+  const serveSrc = fs.readFileSync(path.join(ROOT, "tools", "serve.js"), "utf8");
+  const block = serveSrc.match(/const TYPES = \{([\s\S]*?)\n\};/);
+  if (!block) {
+    errors.push("tools/serve.js 里找不到 TYPES 表");
+  } else {
+    const mapped = new Set(
+      [...block[1].matchAll(/"(\.[a-z0-9]+)":\s*"([^"]+)"/gi)].map((m) => m[1])
+    );
+    // .txt 是给 AI 的纯文本镜像路径，.xml 是站点地图，都必须是正规 MIME
+    [
+      [".txt", "text/plain"],
+      [".xml", "application/xml"]
+    ].forEach(([ext, mime]) => {
+      if (!mapped.has(ext)) {
+        errors.push(`tools/serve.js 的 TYPES 表缺少 ${ext}（应为 ${mime}）`);
+        return;
+      }
+      const line = block[1].match(new RegExp('"' + ext + '":\\s*"([^"]+)"'));
+      if (line && !line[1].startsWith(mime)) {
+        errors.push(
+          `tools/serve.js 里 ${ext} 的 MIME 是 ${line[1]}，与线上的 ${mime} 不一致`
+        );
+      }
+    });
+  }
 }
 
 if (errors.length) {

@@ -16,9 +16,9 @@ cards/
 ├── ai.txt                # 给 AI 的纯文本指令                       [生成]
 ├── llms.txt              # 给 AI 抓取器的站点说明                    [生成]
 ├── robots.txt            # 含给 AI 的注释指令                       [生成]
-├── assets/style.css      # 共用样式
 ├── questions.json        # ★ 题库：唯一需要手工维护的文件
 ├── src/index.template.html # 初始页模板                            [生成用]
+├── src/draw.template.html  # 结果页模板（票据式设计）              [生成用]
 ├── tools/build.js        # 生成器：questions.json -> 静态页面
 ├── tools/check.js        # 校验器：检查编号/题目一一对应 + 指令埋点是否有效
 ├── tools/serve.js        # 本地预览服务器
@@ -152,7 +152,7 @@ npx vercel --prod
 
 ### 方式 D：任意静态服务器 / 对象存储
 
-把 `index.html`、`draw/`、`assets/` 上传到任意支持静态文件的主机即可（Nginx、OSS、Cloudflare Pages、GitHub Pages 等）。无后端、无环境变量、无数据库。
+把 `index.html`、`draw/` 上传到任意支持静态文件的主机即可（Nginx、OSS、Cloudflare Pages、GitHub Pages 等）。无后端、无环境变量、无数据库。
 
 ## 部署后自查
 
@@ -162,7 +162,7 @@ curl -sI https://your-site/ | head -1            # 期望 200
 
 # 2. 25 个结果页全部可访问，且题目互不相同
 for i in $(seq -w 1 25); do
-  curl -s https://your-site/draw/q$i.html | grep -o '<p class="question">.*</p>'
+  curl -s https://your-site/draw/q$i.html | grep -A2 '<h2 class="question'
 done
 
 # 3. 初始页里写的是真实域名
@@ -239,7 +239,7 @@ curl -s https://your-site/index.json | head -5
 
 
 
-用户在初始页点一下「复制链接，发给我的 AI」，把 URL 丢给 AI 就结束了 —— **不需要用户再复制一段说明，页面上也没有「给 AI 的说明」可以复制**。指令埋在初始页的多个位置，覆盖各种抓取方式：
+用户在初始页点一下「直接复制链接发给它」，把 URL 丢给 AI 就结束了 —— **不需要用户再复制一段说明，页面上也没有「给 AI 的说明」可以复制**。指令埋在初始页的多个位置，覆盖各种抓取方式：
 
 | # | 位置 | 人类看到吗 | 什么抓取方式能读到 |
 | --- | --- | --- | --- |
@@ -273,7 +273,7 @@ curl -s https://your-site/index.json | head -5
 
 ## 技术要点
 
-- **结果页是纯静态 HTML**：题目文字直接写在 `<p class="question">` 正文里，不依赖 JS 执行、不藏在变量里、不用图片。这样 AI 的抓取工具能稳定读到原文。
+- **结果页是纯静态 HTML**：题目文字直接写在 `<h2 class="question">` 正文里，不依赖 JS 执行、不藏在变量里、不用图片。这样 AI 的抓取工具能稳定读到原文。
 - **固定映射**：`q07.html` 永远是第 7 题，重复访问、刷新都不变。
 - **初始页不暴露题面**：初始页只写玩法和链接格式，不列出全部题目，避免 AI 直接抄题库而不去访问结果页。
 - **初始页写死了站点地址**：即使 AI 只做纯文本抓取（不执行 JS），也能拿到正确的域名和编号范围。

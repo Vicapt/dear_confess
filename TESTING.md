@@ -51,17 +51,17 @@
 
 用浏览器或 `curl` 打开初始页，确认：
 
-- 标题为「AI 真心话扭蛋」，副标题为「让 AI 为你开启一个意想不到的话题」；
+- 标题为「AI 真心话扭蛋 — 它到底怎么看你？」，副标题为「到底是怎么看你的？」；
 - 页面显示的“本页面地址”是你的真实域名（不是 `example.com`）；
 - 说明文字里写的链接格式是 `https://YOUR-SITE/draw/qNN.html`，编号范围是 q01–q25；
 - 初始页**没有**列出任何一道题的正文（题面只在结果页和隐藏表格里）；
-- 页脚写明「题库共 25 道「问 AI 的题」」。
+- 页脚写明题目总数（如「全站共 25 道」）。
 
 ### 步骤 1.5：确认两个梯队都就位
 
 ```bash
 # 第一梯队：结果页可达且含题面
-curl -s https://YOUR-SITE/draw/q07.html | grep -o '<p class="question">.*</p>'
+curl -s https://YOUR-SITE/draw/q07.html | grep -A2 '<h2 class="question'
 curl -s https://YOUR-SITE/draw/q07.txt  | grep '^题目：'
 
 # 第二梯队：隐藏表格 25 行、每行带锚点
@@ -248,7 +248,7 @@ curl -s https://cards.vicapt.top/ \
 # 期望输出包含 q07 和第 7 题的题目原文
 
 # 再确认这一行和结果页 q07 的题面一致（两个来源必须一致，否则降级路径会给出错题）
-curl -s https://cards.vicapt.top/draw/q07.html | grep -o '<p class="question">.*</p>'
+curl -s https://cards.vicapt.top/draw/q07.html | grep -A2 '<h2 class="question'
 ```
 
 两步输出中的题目文字必须**逐字一致**。不一致说明表格和结果页脱节了 —— 那会让降级路径

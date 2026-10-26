@@ -401,6 +401,70 @@ if (/\bexample\.com\b/.test(indexHtml)) {
   errors.push("index.html 仍残留 example.com 占位域名");
 }
 
+// ===== ICP 备案号 =====
+// 依据《非经营性互联网信息服务备案管理办法》第十三条：网站主页底部中央位置
+// 必须标明备案编号，并在编号下方链接到备案管理系统供公众查询核对。
+// 不挂的后果不是「不好看」，是责令改正 + 5000~10000 元罚款。
+//
+// 三个都要查，缺一不可：
+//   1) 号码出现在初始页和**每一个**结果页（结果页是独立可访问的 URL）；
+//   2) 号码下方有到 beian.miit.gov.cn 的链接；
+//   3) **静态写死** —— 用 JS 动态加载的话抽查爬虫抓不到，等于没挂。
+//      所以把 script 整段剥掉之后，号码和链接还得在。
+const ICP_NUMBER = "沪ICP备2026016090号-1";
+const ICP_LINK = "https://beian.miit.gov.cn/";
+function stripScripts(html) {
+  return html.replace(/<script[\s\S]*?<\/script>/gi, "");
+}
+function checkIcp(html, label) {
+  if (!html.includes(ICP_NUMBER)) {
+    errors.push(label + " 没有 ICP 备案号「" + ICP_NUMBER + "」");
+  }
+  if (!html.includes('href="' + ICP_LINK + '"')) {
+    errors.push(label + " 的 ICP 备案号没有链接到 " + ICP_LINK);
+  }
+  const staticHtml = stripScripts(html);
+  if (!staticHtml.includes(ICP_NUMBER) || !staticHtml.includes(ICP_LINK)) {
+    errors.push(label + " 的 ICP 备案号不是静态写死的（扒掉 script 就不见了，等于没挂）");
+  }
+}
+checkIcp(indexHtml, "初始页");
+list.forEach((q) => {
+  const file = path.join(ROOT, "draw", q.id + ".html");
+  if (fs.existsSync(file)) {
+    checkIcp(fs.readFileSync(file, "utf8"), q.id + ".html");
+  }
+});
+
+// ===== 外部域名白名单（反泄漏）=====
+// 站里出现的每一个外部域名都必须是已知且经过授权的。
+// 理由：这个站是给 AI 读的 —— 页面上冒出来任何一个没见过的域名，
+// AI 都可能把它当成「这个网站的权威地址」然后照着去拼结果页链接。
+// 所以这一条要机器守着，靠人记不住。
+const ALLOWED_DOMAINS = [
+  "cdn.tailwindcss.com", // Tailwind Play CDN（用户明确授权）
+  "fonts.googleapis.com", // Google Fonts（用户明确授权）
+  "fonts.gstatic.com", // 同上，preconnect
+  "beian.miit.gov.cn", // 工信部备案查询（法定必须挂）
+  "www.w3.org", // SVG xmlns，不是真实请求
+  "vicapt.top" // 本站自己的域名
+];
+function externalDomains(html) {
+  const m = html.match(/https?:\/\/[a-z0-9.-]+/gi) || [];
+  return [...new Set(m.map((s) => s.replace(/^https?:\/\//i, "").toLowerCase()))];
+}
+function checkExternalDomains(html, label) {
+  externalDomains(html).forEach((d) => {
+    const ok = ALLOWED_DOMAINS.some(
+      (a) => d === a || d.endsWith("." + a)
+    );
+    if (!ok) {
+      errors.push(label + " 出现了未授权的外部域名：" + d);
+    }
+  });
+}
+checkExternalDomains(indexHtml, "初始页");
+
 const seenTexts = new Map();
 list.forEach((q) => {
   const file = path.join(ROOT, "draw", q.id + ".html");
@@ -415,6 +479,7 @@ list.forEach((q) => {
   if (!html.includes(q.id)) {
     errors.push(q.id + ".html 未显示题目编号");
   }
+  checkExternalDomains(html, q.id + ".html");
 
   const directive = html.split('class="ai-directive"')[1] || "";
   if (!/回答这道题|回答它/.test(directive)) {

@@ -20,6 +20,17 @@ const DRAW_TEMPLATE = path.join(ROOT, "src", "draw.template.html");
 const OUT_INDEX = path.join(ROOT, "index.html");
 const OUT_DRAW = path.join(ROOT, "draw");
 
+// ICP 备案号（工信部）。
+// 依据《非经营性互联网信息服务备案管理办法》第十三条：网站主页底部中央位置
+// 必须标明备案编号，并在编号下方链接到备案管理系统供公众查询核对。
+// 两个硬要求：
+//   1) 必须**静态**写进 HTML —— 用 JS 动态加载的话，抽查爬虫抓不到就算没挂；
+//   2) 主机上、备案号下方都要有到 beian.miit.gov.cn 的链接。
+// 子域名共用主域名备案，不需要单独备案、也不需要单独的号，所以这里只维护一个值。
+// 公安备案号（沪公网安备XXXXXXXXXXXXXX号）拿到后加在它下面，格式同样是图标 + 链接。
+const ICP_NUMBER = "沪ICP备2026016090号-1";
+const ICP_LINK = "https://beian.miit.gov.cn/";
+
 function parseArgs(argv) {
   const out = { base: "" };
   for (let i = 2; i < argv.length; i++) {
@@ -343,7 +354,9 @@ function drawPage(q, index, count, template) {
     .split("{{INSTRUCTION_ESC}}").join(escapeHtml(instruction))
     .split("{{INSTRUCTION}}").join(instruction)
     .split("{{QUESTION_JSON}}").join(JSON.stringify(q.text))
-    .split("{{QUESTION}}").join(questionHtml(q.text));
+    .split("{{QUESTION}}").join(questionHtml(q.text))
+    .split("{{ICP_NUMBER}}").join(ICP_NUMBER)
+    .split("{{ICP_LINK}}").join(ICP_LINK);
 }
 
 
@@ -446,7 +459,11 @@ function main() {
     .split("{{LAST_ID_FULL}}")
     .join(bankAI.lastId)
     .split("{{LAST_ID}}")
-    .join(bankAI.lastId.replace(/^\D+/, ""));
+    .join(bankAI.lastId.replace(/^\D+/, ""))
+    .split("{{ICP_NUMBER}}")
+    .join(ICP_NUMBER)
+    .split("{{ICP_LINK}}")
+    .join(ICP_LINK);
 
   fs.writeFileSync(OUT_INDEX, html, "utf8");
 

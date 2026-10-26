@@ -1,6 +1,6 @@
 // 模拟一次完整的 AI 抽卡：读入口 -> 自主选题 -> 走第一梯队 -> 核对第二梯队是否一致
 // 对线上站点跑（需要能访问外网）
-const B = process.argv[2] || "https://cards.vicapt.top";
+const B = process.argv[2] || "https://dear_confess.vicapt.top";
 
 // 结果页题面：h2.question 去掉行内标签后的纯文本
 // （题面里的色号会带 <span> 样式，读到的文字仍然逐字一致）

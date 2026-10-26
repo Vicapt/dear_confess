@@ -67,7 +67,7 @@ async function api(tok, method, endpoint, body) {
 
 async function main() {
   const repoArgIndex = process.argv.indexOf("--repo");
-  const repo = repoArgIndex > -1 ? process.argv[repoArgIndex + 1] : "Vicapt/marketproduct";
+  const repo = repoArgIndex > -1 ? process.argv[repoArgIndex + 1] : "Vicapt/dear_confess";
   const [owner, name] = repo.split("/");
 
   const tok = token();

@@ -12,14 +12,14 @@
 
 | 用途 | 链接 |
 | --- | --- |
-| 初始页（也是发给 AI 的入口） | `https://cards.vicapt.top/` |
-| 纯文本 AI 入口 | `https://cards.vicapt.top/ai.txt` |
-| 目录索引（机器可读清单） | `https://cards.vicapt.top/index.json` |
-| 结果页示例（第一梯队） | `https://cards.vicapt.top/draw/q07.html` |
-| 结果页纯文本（第一梯队备用） | `https://cards.vicapt.top/draw/q07.txt` |
+| 初始页（也是发给 AI 的入口） | `https://dear_confess.vicapt.top/` |
+| 纯文本 AI 入口 | `https://dear_confess.vicapt.top/ai.txt` |
+| 目录索引（机器可读清单） | `https://dear_confess.vicapt.top/index.json` |
+| 结果页示例（第一梯队） | `https://dear_confess.vicapt.top/draw/q07.html` |
+| 结果页纯文本（第一梯队备用） | `https://dear_confess.vicapt.top/draw/q07.txt` |
 | 题号范围 | `q01` … `q25`，每题都有 `.html` / `.txt` 两种等价形式 |
 
-> **入口只有一个**：把 `https://cards.vicapt.top/` 发给 AI 就行。指令里写的是
+> **入口只有一个**：把 `https://dear_confess.vicapt.top/` 发给 AI 就行。指令里写的是
 > 「你当前正在访问的地址 + draw/qNN.html」，所以 AI 从哪个入口进，拼出来的链接都指向
 > 它真正能打开的那个主机，不需要为不同平台准备不同链接。
 
@@ -30,14 +30,14 @@
 >
 > ```
 > 来抽一题真心话
-> https://cards.vicapt.top/
+> https://dear_confess.vicapt.top/
 > ```
 
 本地开发时初始页为 `http://localhost:5173/`，但 **localhost 对外部 AI 不可达**，不能用于本测试。
 
 ## 二之二、平台实测记录（持续更新）
 
-| 平台 | 能否打开 `cards.vicapt.top` | 能否打开结果页并读正文 | 结论 |
+| 平台 | 能否打开 `dear_confess.vicapt.top` | 能否打开结果页并读正文 | 结论 |
 | --- | --- | --- | --- |
 | 混元 | ✅ | ✅ | 完整五步通过 |
 | GPT | ❌（域名级拒绝） | — | 平台限制，非站点问题 |
@@ -113,7 +113,7 @@ curl -s https://YOUR-SITE/ | grep -o '不要替用户回答'
 
 正确的 AI 应该：读到这个页面 → 从中读到抽卡指令 → 自己选一个编号 → 访问结果页 → 读到题目 → 回答。
 
-如果 AI 回问「你想抽什么问题」或「你要我做什么」，说明**它没有读到页面里的指令**（可能该 AI 不支持网页访问，或抓取方式把隐藏内容过滤掉了），此时可以把纯文本入口 `https://cards.vicapt.top/ai.txt` 的内容贴给它再测一次 —— 两次结果的差异本身就是有价值的观察。
+如果 AI 回问「你想抽什么问题」或「你要我做什么」，说明**它没有读到页面里的指令**（可能该 AI 不支持网页访问，或抓取方式把隐藏内容过滤掉了），此时可以把纯文本入口 `https://dear_confess.vicapt.top/ai.txt` 的内容贴给它再测一次 —— 两次结果的差异本身就是有价值的观察。
 
 > 注意区分两种「反问」：一是**没读到指令**（失败）；二是指令里明确允许的
 > 「要不要玩一局？」（见 §六）。
@@ -280,7 +280,7 @@ node tools/verify-consistency.js
 
 ```bash
 # 清单可读、条目数与范围正确
-curl -s https://cards.vicapt.top/index.json | node -e "
+curl -s https://dear_confess.vicapt.top/index.json | node -e "
   let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{
     const m=JSON.parse(s);
     console.log(m.count, m.items[0].id, m.items[24].id, m.range.first, m.range.last);
@@ -294,13 +294,13 @@ curl -s https://cards.vicapt.top/index.json | node -e "
 
 ```bash
 # 取初始页，模拟「只读表格第 7 行」
-curl -s https://cards.vicapt.top/ \
+curl -s https://dear_confess.vicapt.top/ \
   | grep 'id="row-q07"' \
   | sed 's/<[^>]*>/ /g' | tr -s ' '
 # 期望输出包含 q07 和第 7 题的题目原文
 
 # 再确认这一行和结果页 q07 的题面一致（两个来源必须一致，否则降级路径会给出错题）
-curl -s https://cards.vicapt.top/draw/q07.html | grep -A2 '<h2 class="question'
+curl -s https://dear_confess.vicapt.top/draw/q07.html | grep -A2 '<h2 class="question'
 ```
 
 两步输出中的题目文字必须**逐字一致**。不一致说明表格和结果页脱节了 —— 那会让降级路径

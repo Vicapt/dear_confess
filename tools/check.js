@@ -450,7 +450,9 @@ const ALLOWED_DOMAINS = [
   "vicapt.top" // 本站自己的域名
 ];
 function externalDomains(html) {
-  const m = html.match(/https?:\/\/[a-z0-9.-]+/gi) || [];
+  // 字符类里必须带下划线：站名里有下划线（dear_confess），
+  // 少了它会把域名截成 "dear" 然后报一个莫名其妙的「未授权域名」。
+  const m = html.match(/https?:\/\/[a-z0-9._-]+/gi) || [];
   return [...new Set(m.map((s) => s.replace(/^https?:\/\//i, "").toLowerCase()))];
 }
 function checkExternalDomains(html, label) {

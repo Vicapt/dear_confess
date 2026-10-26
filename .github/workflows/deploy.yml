@@ -26,7 +26,7 @@ jobs:
       # 站点地址优先取仓库变量 BASE_URL，未设置时回退到自定义域名 / 默认 Pages 域名
       - name: Build static pages
         run: |
-          BASE="${{ vars.BASE_URL || 'https://dear_confess.vicapt.top' }}"
+          BASE="${{ vars.BASE_URL || 'https://dear-confess.vicapt.top' }}"
           node tools/build.js --base "$BASE"
           node tools/check.js
       - name: Stage publish directory

@@ -41,7 +41,7 @@ function parseArgs(argv) {
 
 function normalizeBase(raw) {
   let base = (raw || process.env.SITE_URL || "").trim();
-  if (!base) base = "https://dear_confess.vicapt.top";
+  if (!base) base = "https://dear-confess.vicapt.top";
   base = base.replace(/\/+$/, "");
   if (!/^https?:\/\//i.test(base)) base = "https://" + base;
   return base;

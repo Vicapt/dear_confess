@@ -1,7 +1,7 @@
 {
   "site": "https://dear-confess.vicapt.top/",
-  "count": 27,
-  "idRange": "q01–q25、h01–h02",
+  "count": 28,
+  "idRange": "q01–q25、h01–h03",
   "groups": [
     {
       "code": "q",
@@ -14,8 +14,8 @@
       "code": "h",
       "label": "万圣节限定",
       "first": "h01",
-      "last": "h02",
-      "count": 2
+      "last": "h03",
+      "count": 3
     }
   ],
   "note": "本清单只列编号与文件路径，不含题目正文。题目正文在各自的结果页里，请实际打开读取（html / txt 两种形式内容完全一致）。",
@@ -210,6 +210,15 @@
       "group": "万圣节限定",
       "html": "https://dear-confess.vicapt.top/draw/h02.html",
       "txt": "https://dear-confess.vicapt.top/draw/h02.txt",
+      "season": "halloween",
+      "seasonLabel": "万圣节限定"
+    },
+    {
+      "id": "h03",
+      "index": 3,
+      "group": "万圣节限定",
+      "html": "https://dear-confess.vicapt.top/draw/h03.html",
+      "txt": "https://dear-confess.vicapt.top/draw/h03.txt",
       "season": "halloween",
       "seasonLabel": "万圣节限定"
     }

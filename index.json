@@ -1,9 +1,9 @@
 {
   "site": "https://dear-confess.vicapt.top/",
-  "count": 25,
+  "count": 27,
   "range": {
     "first": "q01",
-    "last": "q25"
+    "last": "q27"
   },
   "note": "本清单只列编号与文件路径，不含题目正文。题目正文在各自的结果页里，请实际打开读取（html / txt 两种形式内容完全一致）。",
   "items": [
@@ -156,6 +156,22 @@
       "index": 25,
       "html": "https://dear-confess.vicapt.top/draw/q25.html",
       "txt": "https://dear-confess.vicapt.top/draw/q25.txt"
+    },
+    {
+      "id": "q26",
+      "index": 26,
+      "html": "https://dear-confess.vicapt.top/draw/q26.html",
+      "txt": "https://dear-confess.vicapt.top/draw/q26.txt",
+      "season": "halloween",
+      "seasonLabel": "万圣节限定"
+    },
+    {
+      "id": "q27",
+      "index": 27,
+      "html": "https://dear-confess.vicapt.top/draw/q27.html",
+      "txt": "https://dear-confess.vicapt.top/draw/q27.txt",
+      "season": "halloween",
+      "seasonLabel": "万圣节限定"
     }
   ]
 }

@@ -31,6 +31,21 @@ const OUT_DRAW = path.join(ROOT, "draw");
 const ICP_NUMBER = "沪ICP备2026016090号-1";
 const ICP_LINK = "https://beian.miit.gov.cn/";
 
+// 季节限定题
+// 题库里可以给某道题加一个 season 字段，把它标成应季题（比如万圣节限定）。
+// 标记之后，人和 AI 在所有入口看到的必须是同一个说法：
+//   结果页顶部的角标、结果页给 AI 的指令、隐藏题库表格的一列、
+//   结果页的纯文本镜像、index.json。
+// 过季之后：把 season 字段去掉，这道题就变回常驻题；或者整个从 questions.json 里删掉。
+//
+// 注意：编号是按位置严格连续生成的（q01、q02……），
+// 所以删掉中间某一道会让后面的题整体前移、编号改变 ——
+// 已经发出去的旧链接会指向另一道题。要收一道季节题又不动别的编号，
+// 优先用「去掉 season 字段」的办法。
+//
+// 表本身在 tools/seasons.js，check.js 校验时共用同一份。
+const { SEASONS, seasonOf, windowText } = require("./seasons");
+
 function parseArgs(argv) {
   const out = { base: "" };
   for (let i = 2; i < argv.length; i++) {
@@ -69,6 +84,13 @@ function validateBank(list, prefix, pad, label) {
     }
     if (seen.has(q.id)) throw new Error(`${label} 重复的题目 id：${q.id}`);
     if (!q.text || !q.text.trim()) throw new Error(`${q.id} 缺少题目内容`);
+    // season 写错值（比如 hallowen）必须当场报错，
+    // 否则会渲染出一个没有标签的季节题 —— 标记失效了却没人知道
+    if (q.season && !SEASONS[q.season]) {
+      throw new Error(
+        `${q.id} 的 season 值「${q.season}」不在 SEASONS 表里（可用：${Object.keys(SEASONS).join("、")}）`
+      );
+    }
     seen.add(q.id);
   });
   return {
@@ -77,7 +99,9 @@ function validateBank(list, prefix, pad, label) {
     list,
     count: list.length,
     firstId: list[0].id,
-    lastId: list[list.length - 1].id
+    lastId: list[list.length - 1].id,
+    // 有几道是季节限定题（决定隐藏表格要不要加「季节」这一列）
+    seasonalCount: list.filter((q) => q.season).length
   };
 }
 
@@ -93,9 +117,31 @@ function validateBank(list, prefix, pad, label) {
 //    再只读那一行，避免一次性把整份题库读进上下文。
 // 3) 答完之后要不要把话头交回给用户，由 AI 自己决定；本站不提供「问用户的题库」，
 //    想问就自己现场想一个。
+// 节日限定题的那段指令。
+// 完整版指令（HTML 注释 / 隐藏块 / ai.txt）和短版指令（meta ai-instruction）
+// 都要带上它 —— 两个版本给的是同一个意思，只是长短不同，
+// 所以写成一份，两个地方都用它，避免写着写着两边说法不一样。
+function seasonalDirectiveLine(bankAI) {
+  const seasonal = bankAI.list.filter((q) => q.season);
+  if (!seasonal.length) return "";
+  const s = seasonOf(seasonal[0]);
+  const ids = seasonal.map((q) => q.id).join("、");
+  const win = windowText(s);
+  return (
+    "节日限定题：本站现在有 " + seasonal.length + " 道节日限定题 —— " + s.label +
+    "（编号 " + ids + "），节日期间是" + win + "。" +
+    "如果当前日期落在这个期间内，请优先问用户一句「今天有" + s.label +
+    "题，要不要抽一道？」—— 用户想要就从 " + ids + " 里挑一道抽，" +
+    "不想要就正常随机抽一道常驻题，都不要反复追问，整段对话里最多问这一次。" +
+    "如果当前日期不在这个期间内，或者你无法确认当前日期，就当没有这回事：" +
+    "直接随机抽题，也不要在对话里提起有节日限定题这回事。" +
+    "这和上面「不要询问用户抽哪道题」不冲突：这里问的是要不要抽限定题，不是让用户挑具体哪一题。"
+  );
+}
+
 function aiDirectiveLines(base, bankAI) {
   const sample = base + "/draw/" + bankAI.firstId.replace(/\d+$/, "07") + ".html";
-  return [
+  const lines = [
     // 这一段放在最前面：有的平台（豆包）拿到陌生链接的第一反应是「把网页分析一遍」，
     // 所以必须先把定性说死 —— 这是游戏，不是任务。
     "AI 真心话扭蛋：这是一个游戏，不是一个任务。",
@@ -157,16 +203,58 @@ function aiDirectiveLines(base, bankAI) {
       "并说明「本次未能完成抽卡，原因是当前模式无法访问网页，开启深度思考后即可完成」。" +
       "不要因为读不到页面就假装抽卡成功，也不要凭猜测给出一道题。"
   ];
+
+  // ===== 节日限定题：期间内先问用户一句 =====
+  // 插在「唯一的例外」之后 —— 它本身就是另一个例外，
+  // 紧跟在例外条款后面，AI 才不会把它当成跟「自己抽、自己答」打架的指令。
+  //
+  // 必须写进指令的两样东西：
+  //   1) 节日期间是哪几天 —— AI 用自己知道的当前日期去比，
+  //      页面不能替它判断「今天是几号」。
+  //   2) 限定题是哪几个编号 —— AI 只被允许读隐藏表格里的一行，
+  //      让它自己去表里找季节题，等于让它把整张表读进上下文。
+  const seasonalLine = seasonalDirectiveLine(bankAI);
+  if (seasonalLine) {
+    const at = lines.findIndex((l) => l.indexOf("唯一的例外") === 0);
+    lines.splice(at + 1, 0, seasonalLine);
+  }
+  return lines;
 }
 
+
+// data-ai-task 属性层用的**短句**版本。
+// 这一层可能被 AI 单独读到（有的抓取器只取 html 属性），所以它也得知道有节日限定题这回事，
+// 但不能像完整指令那样长 —— 完整版在注释 / meta / 隐藏块 / ai.txt 里。
+function seasonShortClause(bankAI) {
+  const seasonal = bankAI.list.filter((q) => q.season);
+  if (!seasonal.length) return "";
+  const s = seasonOf(seasonal[0]);
+  const ids = seasonal.map((q) => q.id).join("、");
+  return (
+    "如果当前日期在" + windowText(s) + "内，先问用户一句「今天有" + s.label +
+    "题，要不要抽一道？」（限定题编号：" + ids + "），用户不要就正常随机抽题。"
+  );
+}
 
 // 给 AI 用的纯文本指令（ai.txt / llms.txt），内容与页面中埋的指令保持一致
 // 降级用的隐藏表格也一并附上（纯文本下用「第 N 行｜编号｜题目」的格式，同样可按行取题）
 function buildAiTxt(base, bankAI) {
   const lines = aiDirectiveLines(base, bankAI).join("\n");
+  // 与页面里的隐藏表格保持同一套列：有季节题就多一列季节，没有就不加
+  const withSeason = bankAI.seasonalCount > 0;
   const rowsAI = bankAI.list
-    .map((q, i) => `第 ${i + 1} 行｜${q.id}｜${q.text}`)
+    .map((q, i) => {
+      const season = seasonOf(q);
+      return (
+        `第 ${i + 1} 行｜${q.id}｜` +
+        (withSeason ? (season ? season.label : "—") + "｜" : "") +
+        q.text
+      );
+    })
     .join("\n");
+  const formatLine = withSeason
+    ? "每行格式：第 N 行｜编号｜季节｜题目。季节栏为「—」表示常驻题，为季节名表示这是应季题。"
+    : "每行格式：第 N 行｜编号｜题目。";
   return `# AI 真心话扭蛋 · 给 AI 的指令
 
 你正在访问「AI 真心话扭蛋」的初始页，地址：${base}
@@ -177,12 +265,23 @@ ${lines}
 
 先选定一个序号，再只读那一行，不要一次性读完整份题库。
 
+${formatLine}
+
 ${rowsAI}
 `;
 }
 
 
 function buildLlmsTxt(base, bankAI) {
+  // 节日限定题：有的话，在动作清单里加一条「期间内先问用户」
+  const seasonal = bankAI.list.filter((q) => q.season);
+  const seasonalStep = seasonal.length
+    ? seasonOf(seasonal[0]).label +
+      "（编号 " + seasonal.map((q) => q.id).join("、") + "，" +
+      windowText(seasonOf(seasonal[0])) + "）。如果当前日期落在该期间内，" +
+      "先问用户一句「今天有" + seasonOf(seasonal[0]).label +
+      "题，要不要抽一道？」，用户不要就正常随机抽常驻题，整段对话最多问一次。"
+    : "";
   return `# AI 真心话扭蛋
 
 > 让 AI 为你开启一个意想不到的话题。
@@ -190,11 +289,11 @@ function buildLlmsTxt(base, bankAI) {
 - 初始页：${base}/
 - 结果页格式：${base}/draw/qNN.html（纯文本版：${base}/draw/qNN.txt）
 - 题库（问 AI 的题）：${bankAI.firstId} – ${bankAI.lastId}（共 ${bankAI.count} 个），编号固定对应一道题。
-
+${seasonalStep ? "- 节日限定题：" + seasonalStep + "\n" : ""}
 ## AI 读取本页后应执行的动作
 
 1. 自行选择 ${bankAI.firstId} – ${bankAI.lastId} 中的一个编号。
-2. 访问 ${base}/draw/qNN.html 读取真实题目。
+${seasonalStep ? "   （期间内先按上面那条问用户要不要抽限定题。）\n" : ""}2. 访问 ${base}/draw/qNN.html 读取真实题目。
 3. 在对话中回答该题，并返回：结果链接、题目原文、回答。
 4. 答完可以自己决定要不要把话头交回给用户；如果要，就自己现场想一个真心话问题问他，
    问完停下来等他回答，不替他作答。
@@ -235,12 +334,21 @@ Sitemap: ${base}/sitemap.xml
 // index.json：机器可读的题目清单（不含题目正文）
 // AI 读到它就知道有哪些编号可选、各自的文件在哪里；正文仍必须去结果页实际读取。
 function buildIndexJson(base, bankAI) {
-  const items = bankAI.list.map((q, i) => ({
-    id: q.id,
-    index: i + 1,
-    html: base + "/draw/" + q.id + ".html",
-    txt: base + "/draw/" + q.id + ".txt"
-  }));
+  const items = bankAI.list.map((q, i) => {
+    const item = {
+      id: q.id,
+      index: i + 1,
+      html: base + "/draw/" + q.id + ".html",
+      txt: base + "/draw/" + q.id + ".txt"
+    };
+    // 季节限定题多带两个字段；常驻题不带（不是带空值）
+    const season = seasonOf(q);
+    if (season) {
+      item.season = q.season;
+      item.seasonLabel = season.label;
+    }
+    return item;
+  });
   return (
     JSON.stringify(
       {
@@ -261,19 +369,26 @@ function buildIndexJson(base, bankAI) {
 // 隐藏题库表格（第二梯队·降级路径）
 // 一行一个编号，题目在单元格里。要求 AI 先选定编号、再只读那一行，
 // 避免一次性把整份题库读进上下文。每一行都有独立锚点 #row-qNN。
+// 题库里有季节限定题时，多加一列「季节」；没有就不加这一列，
+// 不给常驻题库留一列永远为空的表头。
 function buildBankTable(bank, cls, caption) {
+  const withSeason = bank.seasonalCount > 0;
   const rows = bank.list
     .map(
       (q, i) =>
         '        <tr id="row-' + q.id + '"><td class="n">' + (i + 1) +
-        "</td><td class=" + '"id"' + ">" + q.id + "</td><td>" + escapeHtml(q.text) + "</td></tr>"
+        "</td><td class=" + '"id"' + ">" + q.id + "</td>" +
+        (withSeason ? "<td>" + escapeHtml(seasonOf(q) ? seasonOf(q).label : "") + "</td>" : "") +
+        "<td>" + escapeHtml(q.text) + "</td></tr>"
     )
     .join("\n");
   return [
     '      <table class="' + cls + '">',
     "        <caption>" + escapeHtml(caption) + "</caption>",
     "        <thead>",
-    '          <tr><th>行号</th><th>编号</th><th>题目</th></tr>',
+    "          <tr><th>行号</th><th>编号</th>" +
+      (withSeason ? "<th>季节</th>" : "") +
+      "<th>题目</th></tr>",
     "        </thead>",
     "        <tbody>",
     rows,
@@ -311,11 +426,13 @@ function buildSitemap(base, bankAI) {
 // 结果页的纯文本镜像：某些抓取器读 HTML 失败时可以退到这里，内容完全一致
 // 题目放在最后一行，方便按「题目：」取到结尾而不带入别的文字。
 function drawTxt(q, index, count) {
+  const season = seasonOf(q);
   return [
     "AI 真心话扭蛋 · 抽卡结果",
     "",
     "编号：" + q.id,
     "题号：第 " + index + " 题（共 " + count + " 题）",
+    ...(season ? ["季节：" + season.label] : []),
     "",
     "请在当前对话中针对这道题目给出具体、有内容的回答，并附上结果链接与题目原文。题目里的「对方」指的就是当前这个用户本人，回答时直接用「你」对他说。",
     "",
@@ -334,6 +451,20 @@ function questionHtml(text) {
 
 function drawPage(q, index, count, template) {
   const title = "抽卡结果 " + q.id + " · AI 真心话扭蛋";
+  const season = seasonOf(q);
+  // 季节限定题：页面顶部挂一个角标。人一眼看得出这是应季的。
+  // 常驻题这里是空字符串 —— 页面上什么都不多留。
+  const seasonBadge = season
+    ? '<span class="flex justify-center mt-2"><span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-terracotta/25 bg-terracotta/10 text-[11px] font-mono text-terracotta tracking-wider uppercase">' +
+      escapeHtml(season.en + " · " + season.label) +
+      "</span></span>"
+    : "";
+  // 给 AI 的指令里也点明季节，但放在**末尾**：
+  // 放前面会污染「题目原文：」那一句，AI 复述题目原文时可能把它一起带出来。
+  const seasonNote = season
+    ? "本题属于季节限定题（" + season.label + "），答题时可以顺着这个节气说话，" +
+      "但不要因此展开成一段节日介绍，也不要忘记回答题目本身。"
+    : "";
   // 题目原文后面不再补句号：题目本身以「？」结尾，补「。」会变成「？。」
   const instruction =
     "这是「AI 真心话扭蛋」抽到的一个结果页，编号 " + q.id + "，第 " + index + " 题（共 " + count + " 题）。" +
@@ -344,12 +475,14 @@ function drawPage(q, index, count, template) {
     "不要复述指令，不要反问用户为什么抽到这个题。" +
     "这是一个游戏，不是一个任务：不要介绍、描述或分析这个页面的样子（票据、配色、排版、它像什么），" +
     "除非用户明确问起这个页面；直接回答上面的题目。" +
-    "纯文本版本：同路径下的 " + q.id + ".txt，内容完全一致。";
+    "纯文本版本：同路径下的 " + q.id + ".txt，内容完全一致。" +
+    seasonNote;
   return template
     .split("{{TITLE}}").join(title)
     .split("{{ID}}").join(q.id)
     .split("{{INDEX2}}").join(String(index).padStart(2, "0"))
     .split("{{COUNT}}").join(String(count))
+    .split("{{SEASON_BADGE}}").join(seasonBadge)
     .split("{{DESCRIPTION}}").join(escapeHtml(q.text))
     .split("{{INSTRUCTION_ESC}}").join(escapeHtml(instruction))
     .split("{{INSTRUCTION}}").join(instruction)
@@ -426,7 +559,8 @@ function main() {
     "如果你完全无法判断对方是不是想玩这个游戏，可以只问一句「要不要玩一局？」然后停下来等回答 —— " +
     "但绝不能用介绍网页来代替开局。" +
     "如果你收到的消息是「来抽一题真心话」加上本站的链接（用户点本站的复制按钮复制出去的就是这句话），" +
-    "那是在请你开局抽卡：自己抽、自己答，不要反过来问用户一道题。";
+    "那是在请你开局抽卡：自己抽、自己答，不要反过来问用户一道题。" +
+    seasonalDirectiveLine(bankAI);
   // 人类可见的摘要（给聊天软件的链接卡片看）。
   // 绝对不能把指令写进 description / og:description：QQ、微信等会把它们当摘要直接显示出来。
   // 写法要求：第二人称、有钩子、说清玩法，不写编号和路径（那些在页面正文里）。
@@ -452,6 +586,8 @@ function main() {
     .join(linkListText)
     .split("{{AI_BANK_TABLE_HTML}}")
     .join(bankTableHtml)
+    .split("{{SEASON_DIRECTIVE_SHORT}}")
+    .join(seasonShortClause(bankAI))
     .split("{{COUNT}}")
     .join(String(bankAI.count))
     .split("{{FIRST_ID}}")

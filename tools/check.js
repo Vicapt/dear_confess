@@ -13,6 +13,7 @@ const fs = require("fs");
 const path = require("path");
 
 const ROOT = path.resolve(__dirname, "..");
+const { SEASONS, seasonOf, windowText } = require("./seasons");
 const data = JSON.parse(
   fs.readFileSync(path.join(ROOT, "questions.json"), "utf8")
 );
@@ -132,9 +133,27 @@ if (directiveAt < 0) {
     errors.push(`ai.txt 的隐藏题库行数为 ${rows.length}，应为 ${list.length}`);
   }
   list.forEach((q, i) => {
-    const expected = `第 ${i + 1} 行｜${q.id}｜${q.text}`;
-    if (!aiTxt.includes(expected)) {
+    // 按行取，而不是按整份字符串匹配 —— 行的格式以后要变也不会误报
+    const row = aiTxt
+      .split("\n")
+      .find((l) => l.startsWith(`第 ${i + 1} 行｜${q.id}｜`));
+    if (!row) {
       errors.push(`ai.txt 的隐藏题库缺少「${q.id}」这一行`);
+      return;
+    }
+    if (!row.includes(q.text)) {
+      errors.push(`ai.txt 的「${q.id}」这一行没有带上题目原文`);
+    }
+    // 季节标记：应季题必须有，常驻题必须没有（两个方向都要查）
+    const season = seasonOf(q);
+    if (season && !row.includes(season.label)) {
+      errors.push(`ai.txt 的「${q.id}」是${season.label}，但这一行没有季节标记`);
+    }
+    if (!season) {
+      const leaked = Object.values(SEASONS).find((s) => row.includes(s.label));
+      if (leaked) {
+        errors.push(`ai.txt 的「${q.id}」是常驻题，却带了季节标记「${leaked.label}」`);
+      }
     }
   });
   if (/第 \d+ 行｜u\d\d｜/.test(aiTxt)) {
@@ -174,6 +193,18 @@ if (!fs.existsSync(indexJsonPath)) {
         }
         if (!it.txt || !it.txt.includes("/draw/" + q.id + ".txt")) {
           errors.push(`index.json 中 ${q.id} 的 txt 路径不正确`);
+        }
+        // 季节标记：应季题带 season / seasonLabel；常驻题不能带（不是带空值）
+        const s = seasonOf(q);
+        if (s) {
+          if (it.season !== q.season) {
+            errors.push(`index.json 中 ${q.id} 的 season 不对：期望 ${q.season}，实际 ${it.season}`);
+          }
+          if (it.seasonLabel !== s.label) {
+            errors.push(`index.json 中 ${q.id} 的 seasonLabel 不对：期望 ${s.label}，实际 ${it.seasonLabel}`);
+          }
+        } else if (it.season !== undefined || it.seasonLabel !== undefined) {
+          errors.push(`index.json 中 ${q.id} 是常驻题，却带了 season 字段`);
         }
       });
     }
@@ -219,6 +250,34 @@ if (!indexHtml.includes("index.json")) {
     if (!table.includes("<th>行号</th>")) {
       errors.push(label + "缺少「行号」表头");
     }
+    // ===== 季节标记（隐藏题库表格）=====
+    // 有季节题才加「季节」这一列；常驻题的行在这一列上必须是空的。
+    // 列的增删由「题库里有没有季节题」决定 —— 不给常驻题库留一列永远为空的表头。
+    const seasonal = bank.filter((q) => seasonOf(q));
+    const hasSeasonCol = table.includes("<th>季节</th>");
+    if (seasonal.length > 0 && !hasSeasonCol) {
+      errors.push(label + "有 " + seasonal.length + " 道季节题，却没有「季节」这一列");
+    }
+    if (seasonal.length === 0 && hasSeasonCol) {
+      errors.push(label + "没有季节题，却留了「季节」这一列");
+    }
+    bank.forEach((q) => {
+      const row = table.match(
+        new RegExp('<tr id="row-' + q.id + '">([\\s\\S]*?)</tr>')
+      );
+      if (!row) return;
+      const s = seasonOf(q);
+      if (s) {
+        if (!row[1].includes(s.label)) {
+          errors.push(label + "的 " + q.id + " 行没有季节标记「" + s.label + "」");
+        }
+      } else {
+        const leaked = Object.values(SEASONS).find((x) => row[1].includes(x.label));
+        if (leaked) {
+          errors.push(label + "的 " + q.id + " 行是常驻题，却带了季节标记「" + leaked.label + "」");
+        }
+      }
+    });
     // 降级路径与结果页必须给同一道题，否则降级读到的题和真实抽卡结果对不上
     bank.forEach((q) => {
       const page = path.join(ROOT, "draw", q.id + ".html");
@@ -370,6 +429,65 @@ Object.entries(indexLayers).forEach(([label, text]) => {
   });
 });
 
+// ===== 节日期间「先问用户」的指令 =====
+// 题库里有季节限定题时，初始页的每一层埋点、两个纯文本入口，
+// 都必须写清三件事，缺一件 AI 就问不出来：
+//   1) 节日限定题的名字（哪个节日）
+//   2) 节日期间是哪几天（AI 拿它自己知道的当前日期去比，页面替不了它判断今天几号）
+//   3) 限定题是哪几个编号（AI 只被允许读隐藏表格里的一行，
+//      让它自己从表里找季节题 = 让它把整张表读进上下文）
+//
+// 没有季节题时反过来：一点痕迹都不许留。
+const seasonalList = list.filter((q) => q.season);
+if (seasonalList.length > 0) {
+  const s = seasonOf(seasonalList[0]);
+  const ids = seasonalList.map((q) => q.id).join("、");
+  const win = windowText(s);
+  Object.entries(indexLayers).forEach(([label, text]) => {
+    if (!text.includes(s.label)) {
+      errors.push("初始页的「" + label + "」层没有提到季节限定题「" + s.label + "」");
+    }
+  });
+  // 编号和期间必须在「有完整指令」的层里写明；
+  // data-ai-task 是短句版，只要求它提到节日名（下面单独查它有没有编号）
+  ["HTML 注释", "meta ai-instruction", "隐藏 DOM 指令块"].forEach((label) => {
+    const text = indexLayers[label];
+    if (!text.includes(ids)) {
+      errors.push("初始页的「" + label + "」层没有列出季节限定题的编号（" + ids + "）");
+    }
+    if (!text.includes(win)) {
+      errors.push("初始页的「" + label + "」层没有写明节日期间（" + win + "）");
+    }
+    if (!text.includes("要不要抽一道")) {
+      errors.push("初始页的「" + label + "」层没有让 AI 在节日期间问用户一句");
+    }
+  });
+  ["ai.txt", "llms.txt"].forEach((file) => {
+    const text = fs.readFileSync(path.join(ROOT, file), "utf8");
+    if (!text.includes(s.label)) {
+      errors.push(file + " 没有提到季节限定题「" + s.label + "」");
+    }
+    if (!text.includes(ids)) {
+      errors.push(file + " 没有列出季节限定题的编号（" + ids + "）");
+    }
+    if (!text.includes(win)) {
+      errors.push(file + " 没有写明节日期间（" + win + "）");
+    }
+  });
+} else {
+  Object.values(SEASONS).forEach((s) => {
+    [indexHtml,
+      fs.readFileSync(path.join(ROOT, "ai.txt"), "utf8"),
+      fs.readFileSync(path.join(ROOT, "llms.txt"), "utf8")
+    ].forEach((text, i) => {
+      const where = ["初始页", "ai.txt", "llms.txt"][i];
+      if (text.includes(s.label)) {
+        errors.push("题库里没有季节题，" + where + " 却出现了「" + s.label + "」");
+      }
+    });
+  });
+}
+
 // 「来抽一题真心话 + 链接」这句话必须被明确解释成「请你开局抽卡」，
 // 否则 AI 可能把它误读成「反过来问我一道题」（指令里的「重要三」），
 // 于是礼貌地反问用户一句，什么也没抽到。
@@ -506,6 +624,31 @@ list.forEach((q) => {
     });
   });
 
+  // ===== 季节标记 =====
+  // 应季题：角标 + 指令里点明，三个承载指令的层都要有。
+  // 常驻题：一点痕迹都不能留。
+  // 两个方向都查 —— 只查「应季题有没有角标」的话，
+  // 模板里残留一个角标会让所有常驻题都显示「万圣节限定」，却没人会发现。
+  const season = seasonOf(q);
+  const INSTRUCTION_LAYERS = ["HTML 注释", "meta ai-instruction", "隐藏 DOM 指令块"];
+  if (season) {
+    const badge = season.en + " · " + season.label;
+    if (!html.includes(badge)) {
+      errors.push(q.id + ".html 缺少季节角标「" + badge + "」");
+    }
+    INSTRUCTION_LAYERS.forEach((label) => {
+      if (!pageLayers[label].includes("季节限定题（" + season.label + "）")) {
+        errors.push(q.id + ".html 的「" + label + "」层没有点明这是" + season.label + "题");
+      }
+    });
+  } else {
+    Object.values(SEASONS).forEach((s) => {
+      if (html.includes(s.label) || html.includes(s.en)) {
+        errors.push(q.id + ".html 是常驻题，却出现了季节标记「" + s.label + "」");
+      }
+    });
+  }
+
   // 纯文本镜像
   const txtFile = path.join(ROOT, "draw", q.id + ".txt");
   if (!fs.existsSync(txtFile)) {
@@ -514,6 +657,19 @@ list.forEach((q) => {
     const txt = fs.readFileSync(txtFile, "utf8");
     if (!txt.includes(q.text)) {
       errors.push(q.id + ".txt 未包含题目原文");
+    }
+    // 纯文本镜像里的季节标记，与 HTML 保持一致
+    const txtSeason = seasonOf(q);
+    if (txtSeason) {
+      if (!txt.includes("季节：" + txtSeason.label)) {
+        errors.push(q.id + ".txt 缺少季节标记「季节：" + txtSeason.label + "」");
+      }
+    } else {
+      Object.values(SEASONS).forEach((s) => {
+        if (txt.includes(s.label)) {
+          errors.push(q.id + ".txt 是常驻题，却出现了季节标记「" + s.label + "」");
+        }
+      });
     }
     // 解析约定：题目在「题目：」之后直到文末，机器可稳定取出
     const m = txt.match(/题目：([\s\S]*)/);

@@ -70,6 +70,60 @@ if (!indexHtml.includes("/draw/")) {
   errors.push("index.html 未包含结果链接格式说明");
 }
 
+// ===== 更新记录 =====
+// CHANGELOG.md 是唯一来源，主页最下方要渲染出最近几条。
+// 这里把文件和页面来回比一遍：文件里写了，页面上就必须有；
+// 反过来，页面上也不该出现文件里没有的旧条目。
+function escHtml(s) {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+const changelogPath = path.join(ROOT, "CHANGELOG.md");
+if (fs.existsSync(changelogPath)) {
+  const entries = [];
+  let cur = null;
+  for (const line of fs.readFileSync(changelogPath, "utf8").split(/\r?\n/)) {
+    const h = line.match(/^##\s+(.+?)\s*$/);
+    if (h) {
+      cur = { date: h[1], items: [] };
+      entries.push(cur);
+      continue;
+    }
+    const b = line.match(/^[-*]\s+(.+?)\s*$/);
+    if (b && cur) cur.items.push(b[1]);
+  }
+  const shown = entries.filter((e) => e.items.length);
+  if (!shown.length) {
+    errors.push("CHANGELOG.md 里没有可显示的条目（## 日期 + - 内容）");
+  } else {
+    if (!/<details[^>]*>[\s\S]*更新记录/.test(indexHtml)) {
+      errors.push("index.html 缺少「更新记录」区块");
+    }
+    shown.slice(0, 5).forEach((e) => {
+      if (!indexHtml.includes(escHtml(e.date))) {
+        errors.push("index.html 的更新记录缺少日期 " + e.date);
+      }
+      e.items.forEach((t) => {
+        if (!indexHtml.includes(escHtml(t))) {
+          errors.push("index.html 的更新记录缺少内容：" + t.slice(0, 20));
+        }
+      });
+    });
+    // 只显示最近 5 条是刻意的：更旧的条目不该还留在页面上
+    if (shown.length > 5 && indexHtml.includes(escHtml(shown[5].date))) {
+      errors.push("index.html 的更新记录显示了 5 条以外的旧条目：" + shown[5].date);
+    }
+  }
+}
+// 页面里不该残留任何没替换掉的占位符
+if (indexHtml.includes("{{")) {
+  errors.push("index.html 残留未替换的占位符 {{...}}");
+}
+
 // 已废弃的 u 组（问用户的题）必须彻底消失
 if (/\bu\d\d\b/.test(indexHtml)) {
   errors.push("index.html 仍残留 u 组编号（u 组题库已废弃）");

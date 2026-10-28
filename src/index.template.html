@@ -225,6 +225,18 @@
       </div>
     </main>
 
+    <!-- ===== 更新记录（给人看的；内容来自仓库根目录的 CHANGELOG.md） =====
+         放在页面最下方、折叠起来：不干扰首屏，也不干扰 AI 读题。 -->
+    <section class="w-full max-w-[480px] mx-auto mt-6 mb-1">
+      <details class="group">
+        <summary class="cursor-pointer list-none flex items-center gap-1.5 text-[11px] font-mono tracking-[0.18em] text-stoneMuted/70 hover:text-charcoal transition-colors select-none">
+          <span class="text-terracotta/60 transition-transform duration-200 group-open:rotate-90">▸</span>
+          更新记录
+        </summary>
+{{CHANGELOG_HTML}}
+      </details>
+    </section>
+
     <!-- 交互脚本：旋钮物理转动 + 自动复制 -->
     <script>
       (function () {

@@ -21,7 +21,7 @@ function pageQuestion(page) {
     .trim();
 }
 
-const bank = { label: "q 组", list: data.questions || [], cls: "ai-bank" };
+const bank = { label: "题库", list: data.questions || [], cls: "ai-bank" };
 
 let bad = 0;
 {
@@ -55,8 +55,17 @@ let bad = 0;
 }
 
 const total = bank.list.length;
+// 按编号前缀分组报数（常驻题一组，每个节日各一组）
+const groupCount = {};
+bank.list.forEach((q) => {
+  const k = q.season ? q.season : "常驻题";
+  groupCount[k] = (groupCount[k] || 0) + 1;
+});
+const breakdown = Object.keys(groupCount)
+  .map((k) => k + " " + groupCount[k] + " 道")
+  .join("、");
 console.log(
-  "核对 " + total + " 题（" + bank.label + " " + total + " 道）：",
+  "核对 " + total + " 题（" + breakdown + "）：",
   bad === 0 ? "表格 / 结果页 / txt / 题库 四者全部一致 ✓" : bad + " 处不一致"
 );
 process.exit(bad === 0 ? 0 : 1);

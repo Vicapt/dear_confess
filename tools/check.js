@@ -25,6 +25,34 @@ const errors = [];
 const firstId = list[0].id;
 const lastId = list[list.length - 1].id;
 
+// 编号分组：常驻题一组，每个节日各一组（节日题的编号前缀由 SEASONS 里的 code 决定）。
+// 题号范围因此不是一段连续区间，而是「q01–q25、h01–h02」这样的分组列表。
+const regularList = list.filter((q) => !q.season);
+const groups = [];
+if (regularList.length) {
+  groups.push({
+    code: data.prefix || "q",
+    label: "常驻题",
+    ids: regularList.map((q) => q.id),
+    first: regularList[0].id,
+    last: regularList[regularList.length - 1].id,
+    count: regularList.length
+  });
+}
+Object.keys(SEASONS).forEach((key) => {
+  const members = list.filter((q) => q.season === key);
+  if (!members.length) return;
+  groups.push({
+    code: SEASONS[key].code,
+    label: SEASONS[key].label,
+    ids: members.map((q) => q.id),
+    first: members[0].id,
+    last: members[members.length - 1].id,
+    count: members.length
+  });
+});
+const idRange = groups.map((g) => g.first + "–" + g.last).join("、");
+
 // 从结果页 HTML 里取出题面：h2.question 去掉标签与实体后的纯文本。
 // 题目里可能有 <span> 之类的行内标签（色号会加等宽样式），
 // 比对时要按「人能读到的文字」来比，而不是按标记比。
@@ -44,13 +72,13 @@ function questionText(html) {
 
 if (!list.length) errors.push("questions.json 里没有「问 AI 的题」");
 
-if (!indexHtml.includes(firstId) || !indexHtml.includes(lastId)) {
-  errors.push("index.html 未包含题号范围 " + firstId + "-" + lastId);
-}
-// 题号范围必须由题库动态生成，不能写死（题库增减后会悄悄失效）
-if (!indexHtml.includes(firstId + "–" + lastId)) {
-  errors.push("index.html 未使用当前题号范围 " + firstId + "–" + lastId + "（疑似写死）");
-}
+// 题号范围必须由题库动态生成，不能写死（题库增减后会悄悄失效）。
+// 范围按分组写：q01–q25、h01–h02
+groups.forEach((g) => {
+  if (!indexHtml.includes(g.first + "–" + g.last)) {
+    errors.push("index.html 未包含题号范围 " + g.first + "–" + g.last);
+  }
+});
 // 人看到的题目总数必须和题库一致。
 // 只锚「共 N 道」这半句，前面的措辞（题库共 / 全站共）允许随文案改。
 if (!indexHtml.includes("共 " + list.length + " 道")) {
@@ -192,7 +220,7 @@ if (directiveAt < 0) {
 // ai.txt 里必须有可按行取题的隐藏题库
 {
   const aiTxt = fs.readFileSync(path.join(ROOT, "ai.txt"), "utf8");
-  const rows = aiTxt.match(/^第 \d+ 行｜q\d\d｜.+$/gm) || [];
+  const rows = aiTxt.match(/^第 \d+ 行｜[a-z]\d\d｜.+$/gm) || [];
   if (rows.length !== list.length) {
     errors.push(`ai.txt 的隐藏题库行数为 ${rows.length}，应为 ${list.length}`);
   }
@@ -298,7 +326,11 @@ if (!indexHtml.includes("index.json")) {
   }
   const checkTable = (table, bank, prefix, label) => {
     if (!table) return;
-    const rowMatches = table.match(new RegExp('<tr id="row-' + prefix + '\\d\\d">', "g")) || [];
+    // 行锚点是 row-<编号>，编号可能来自任意前缀（q 常规题、h 万圣节题……），
+    // 所以这里按题库里出现过的编号逐个查，而不是按前缀正则。
+    const rowMatches = bank.filter((q) =>
+      table.includes('<tr id="row-' + q.id + '">')
+    );
     if (rowMatches.length !== bank.length) {
       errors.push(`${label}行数为 ${rowMatches.length}，应为 ${bank.length}`);
     }
@@ -363,7 +395,7 @@ if (!indexHtml.includes("index.json")) {
       }
     });
   };
-  checkTable(tableMatch && tableMatch[0], list, "q", "q 组隐藏题库");
+  checkTable(tableMatch && tableMatch[0], list, "q", "隐藏题库");
 }
 
 // 模拟常见抓取器：去掉 script/style/注释后取 DOM 文本，确认指令仍然读得到
@@ -415,7 +447,7 @@ if (!indexHtml.includes("无法访问结果页")) {
   errors.push("初始页缺少「无法访问结果页」的失败声明要求");
 }
 // 必须提供多主机 / 多格式的等价读取路径（不同平台的抓取器限制差异很大）
-if (!indexHtml.includes("qNN.txt")) {
+if (!/\/draw\/[a-z]\d\d\.txt/.test(indexHtml)) {
   errors.push("初始页缺少纯文本备用路径");
 }
 // 降级路径必须要求「先选序号、再只读那一行」，避免一次性读完整份题库
@@ -573,7 +605,7 @@ if (!fs.readFileSync(path.join(ROOT, "ai.txt"), "utf8").includes("深度思考")
   errors.push("ai.txt 缺少「开启深度思考后重试」的引导");
 }
 // 候选链接清单：只有地址，没有题面
-const linkMatches = indexHtml.match(/href="draw\/q\d\d\.html"/g) || [];
+const linkMatches = indexHtml.match(/href="draw\/[a-z]\d\d\.html"/g) || [];
 if (linkMatches.length < list.length) {
   errors.push(
     "初始页候选结果页链接不足（实得 " + linkMatches.length + "，应为 " + list.length + "）"
@@ -651,6 +683,21 @@ function checkExternalDomains(html, label) {
 }
 checkExternalDomains(indexHtml, "初始页");
 
+// ===== 节日专属编号 =====
+// 规则：常驻题走 q 组连号；每个节日有自己的编号前缀（SEASONS 里的 code），
+// 节日题的编号 = 该前缀 + 它在这个节日里的第几道。
+// 查两件事：前缀对不对、组内连不连号（不许出现 h01、h03 这种跳号）。
+groups.forEach((g) => {
+  g.ids.forEach((id, i) => {
+    const expect = g.code + String(i + 1).padStart(2, "0");
+    if (id !== expect) {
+      errors.push(
+        "「" + g.label + "」组的第 " + (i + 1) + " 个编号应是 " + expect + "，实际是 " + id
+      );
+    }
+  });
+});
+
 const seenTexts = new Map();
 list.forEach((q) => {
   const file = path.join(ROOT, "draw", q.id + ".html");
@@ -664,6 +711,19 @@ list.forEach((q) => {
   }
   if (!html.includes(q.id)) {
     errors.push(q.id + ".html 未显示题目编号");
+  }
+  // 票据上的 SERIES 编号要跟这道题所属的那一组对得上（常驻题 Q、万圣节题 H）
+  {
+    const g = groups.find((x) => x.ids.indexOf(q.id) >= 0);
+    const series = "SERIES " + g.code.toUpperCase();
+    if (!html.includes(series)) {
+      errors.push(q.id + ".html 的票据编号不是「" + series + "」");
+    }
+    // 组内序号：h01 是 NO.01，q07 是 NO.07
+    const idx = g.ids.indexOf(q.id) + 1;
+    if (!html.includes("NO." + String(idx).padStart(2, "0"))) {
+      errors.push(q.id + ".html 的票据序号不是 NO." + String(idx).padStart(2, "0"));
+    }
   }
   checkExternalDomains(html, q.id + ".html");
 
@@ -811,4 +871,4 @@ if (errors.length) {
 console.log(
   `校验通过：${list.length} 个「问 AI 的题」结果页，编号与题目一一对应且互不重复。`
 );
-console.log(`题号范围：${firstId} - ${lastId}`);
+console.log(`题号范围：${idRange}`);

@@ -1,175 +1,215 @@
 {
   "site": "https://dear-confess.vicapt.top/",
   "count": 27,
-  "range": {
-    "first": "q01",
-    "last": "q27"
-  },
+  "idRange": "q01–q25、h01–h02",
+  "groups": [
+    {
+      "code": "q",
+      "label": "常驻题",
+      "first": "q01",
+      "last": "q25",
+      "count": 25
+    },
+    {
+      "code": "h",
+      "label": "万圣节限定",
+      "first": "h01",
+      "last": "h02",
+      "count": 2
+    }
+  ],
   "note": "本清单只列编号与文件路径，不含题目正文。题目正文在各自的结果页里，请实际打开读取（html / txt 两种形式内容完全一致）。",
   "items": [
     {
       "id": "q01",
       "index": 1,
+      "group": "常驻题",
       "html": "https://dear-confess.vicapt.top/draw/q01.html",
       "txt": "https://dear-confess.vicapt.top/draw/q01.txt"
     },
     {
       "id": "q02",
       "index": 2,
+      "group": "常驻题",
       "html": "https://dear-confess.vicapt.top/draw/q02.html",
       "txt": "https://dear-confess.vicapt.top/draw/q02.txt"
     },
     {
       "id": "q03",
       "index": 3,
+      "group": "常驻题",
       "html": "https://dear-confess.vicapt.top/draw/q03.html",
       "txt": "https://dear-confess.vicapt.top/draw/q03.txt"
     },
     {
       "id": "q04",
       "index": 4,
+      "group": "常驻题",
       "html": "https://dear-confess.vicapt.top/draw/q04.html",
       "txt": "https://dear-confess.vicapt.top/draw/q04.txt"
     },
     {
       "id": "q05",
       "index": 5,
+      "group": "常驻题",
       "html": "https://dear-confess.vicapt.top/draw/q05.html",
       "txt": "https://dear-confess.vicapt.top/draw/q05.txt"
     },
     {
       "id": "q06",
       "index": 6,
+      "group": "常驻题",
       "html": "https://dear-confess.vicapt.top/draw/q06.html",
       "txt": "https://dear-confess.vicapt.top/draw/q06.txt"
     },
     {
       "id": "q07",
       "index": 7,
+      "group": "常驻题",
       "html": "https://dear-confess.vicapt.top/draw/q07.html",
       "txt": "https://dear-confess.vicapt.top/draw/q07.txt"
     },
     {
       "id": "q08",
       "index": 8,
+      "group": "常驻题",
       "html": "https://dear-confess.vicapt.top/draw/q08.html",
       "txt": "https://dear-confess.vicapt.top/draw/q08.txt"
     },
     {
       "id": "q09",
       "index": 9,
+      "group": "常驻题",
       "html": "https://dear-confess.vicapt.top/draw/q09.html",
       "txt": "https://dear-confess.vicapt.top/draw/q09.txt"
     },
     {
       "id": "q10",
       "index": 10,
+      "group": "常驻题",
       "html": "https://dear-confess.vicapt.top/draw/q10.html",
       "txt": "https://dear-confess.vicapt.top/draw/q10.txt"
     },
     {
       "id": "q11",
       "index": 11,
+      "group": "常驻题",
       "html": "https://dear-confess.vicapt.top/draw/q11.html",
       "txt": "https://dear-confess.vicapt.top/draw/q11.txt"
     },
     {
       "id": "q12",
       "index": 12,
+      "group": "常驻题",
       "html": "https://dear-confess.vicapt.top/draw/q12.html",
       "txt": "https://dear-confess.vicapt.top/draw/q12.txt"
     },
     {
       "id": "q13",
       "index": 13,
+      "group": "常驻题",
       "html": "https://dear-confess.vicapt.top/draw/q13.html",
       "txt": "https://dear-confess.vicapt.top/draw/q13.txt"
     },
     {
       "id": "q14",
       "index": 14,
+      "group": "常驻题",
       "html": "https://dear-confess.vicapt.top/draw/q14.html",
       "txt": "https://dear-confess.vicapt.top/draw/q14.txt"
     },
     {
       "id": "q15",
       "index": 15,
+      "group": "常驻题",
       "html": "https://dear-confess.vicapt.top/draw/q15.html",
       "txt": "https://dear-confess.vicapt.top/draw/q15.txt"
     },
     {
       "id": "q16",
       "index": 16,
+      "group": "常驻题",
       "html": "https://dear-confess.vicapt.top/draw/q16.html",
       "txt": "https://dear-confess.vicapt.top/draw/q16.txt"
     },
     {
       "id": "q17",
       "index": 17,
+      "group": "常驻题",
       "html": "https://dear-confess.vicapt.top/draw/q17.html",
       "txt": "https://dear-confess.vicapt.top/draw/q17.txt"
     },
     {
       "id": "q18",
       "index": 18,
+      "group": "常驻题",
       "html": "https://dear-confess.vicapt.top/draw/q18.html",
       "txt": "https://dear-confess.vicapt.top/draw/q18.txt"
     },
     {
       "id": "q19",
       "index": 19,
+      "group": "常驻题",
       "html": "https://dear-confess.vicapt.top/draw/q19.html",
       "txt": "https://dear-confess.vicapt.top/draw/q19.txt"
     },
     {
       "id": "q20",
       "index": 20,
+      "group": "常驻题",
       "html": "https://dear-confess.vicapt.top/draw/q20.html",
       "txt": "https://dear-confess.vicapt.top/draw/q20.txt"
     },
     {
       "id": "q21",
       "index": 21,
+      "group": "常驻题",
       "html": "https://dear-confess.vicapt.top/draw/q21.html",
       "txt": "https://dear-confess.vicapt.top/draw/q21.txt"
     },
     {
       "id": "q22",
       "index": 22,
+      "group": "常驻题",
       "html": "https://dear-confess.vicapt.top/draw/q22.html",
       "txt": "https://dear-confess.vicapt.top/draw/q22.txt"
     },
     {
       "id": "q23",
       "index": 23,
+      "group": "常驻题",
       "html": "https://dear-confess.vicapt.top/draw/q23.html",
       "txt": "https://dear-confess.vicapt.top/draw/q23.txt"
     },
     {
       "id": "q24",
       "index": 24,
+      "group": "常驻题",
       "html": "https://dear-confess.vicapt.top/draw/q24.html",
       "txt": "https://dear-confess.vicapt.top/draw/q24.txt"
     },
     {
       "id": "q25",
       "index": 25,
+      "group": "常驻题",
       "html": "https://dear-confess.vicapt.top/draw/q25.html",
       "txt": "https://dear-confess.vicapt.top/draw/q25.txt"
     },
     {
-      "id": "q26",
-      "index": 26,
-      "html": "https://dear-confess.vicapt.top/draw/q26.html",
-      "txt": "https://dear-confess.vicapt.top/draw/q26.txt",
+      "id": "h01",
+      "index": 1,
+      "group": "万圣节限定",
+      "html": "https://dear-confess.vicapt.top/draw/h01.html",
+      "txt": "https://dear-confess.vicapt.top/draw/h01.txt",
       "season": "halloween",
       "seasonLabel": "万圣节限定"
     },
     {
-      "id": "q27",
-      "index": 27,
-      "html": "https://dear-confess.vicapt.top/draw/q27.html",
-      "txt": "https://dear-confess.vicapt.top/draw/q27.txt",
+      "id": "h02",
+      "index": 2,
+      "group": "万圣节限定",
+      "html": "https://dear-confess.vicapt.top/draw/h02.html",
+      "txt": "https://dear-confess.vicapt.top/draw/h02.txt",
       "season": "halloween",
       "seasonLabel": "万圣节限定"
     }

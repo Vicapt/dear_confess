@@ -56,6 +56,16 @@ if (!indexHtml.includes(firstId + "–" + lastId)) {
 if (!indexHtml.includes("共 " + list.length + " 道")) {
   errors.push("index.html 的题库总数与题库不一致（应为 " + list.length + "）");
 }
+// 首屏那句「N 道藏在代码深处」里的 N 也必须等于题库数量，
+// 否则加题之后人看到的和实际抽到的不一样。
+const headlineCount = indexHtml.match(/(\d+)\s*道藏在代码深处/);
+if (!headlineCount) {
+  errors.push("index.html 首屏缺少「N 道藏在代码深处」这句题量文案");
+} else if (Number(headlineCount[1]) !== list.length) {
+  errors.push(
+    "index.html 首屏写的是 " + headlineCount[1] + " 道，但题库有 " + list.length + " 道"
+  );
+}
 if (!indexHtml.includes("/draw/")) {
   errors.push("index.html 未包含结果链接格式说明");
 }

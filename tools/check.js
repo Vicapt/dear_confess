@@ -429,11 +429,24 @@ if (!domText(indexHtml).includes("/draw/q")) {
 const copyTextMatch = indexHtml.match(/var\s+COPY_TEXT\s*=\s*([^;]+);/);
 if (!copyTextMatch) {
   errors.push("初始页的脚本里找不到 COPY_TEXT（复制出去的内容没有写死）");
-} else if (!/^"来抽一题真心话\\n"\s*\+\s*SITE_URL$/.test(copyTextMatch[1].trim())) {
+} else if (!/^"来抽一题真心话\\n"\s*\+\s*COPY_URL$/.test(copyTextMatch[1].trim())) {
   errors.push(
     "初始页的复制按钮复制出去的不是「来抽一题真心话 + 链接」，实际是：" +
       copyTextMatch[1].trim()
   );
+}
+// 复制出去的链接必须带版本参数 ?v=xxxxxxxx ——
+// 静态站会被 CDN 缓存，不带新参数，AI 打开的可能还是旧快照（旧的题库、旧的节日名单）。
+// 版本号本身必须是写死的 8 位哈希，不能是运行时才算出来的东西。
+const versionMatch = indexHtml.match(/var\s+VERSION\s*=\s*"([0-9a-f]{8})"/);
+if (!versionMatch) {
+  errors.push('初始页的脚本里没有写死版本号（应为 var VERSION = "xxxxxxxx"）');
+}
+const copyUrlMatch = indexHtml.match(/var\s+COPY_URL\s*=\s*([\s\S]*?);/);
+if (!copyUrlMatch) {
+  errors.push("初始页的脚本里找不到 COPY_URL");
+} else if (!/v=" \+ VERSION|\?v=|&v=/.test(copyUrlMatch[1])) {
+  errors.push("初始页复制出去的链接没有带版本参数（AI 可能读到 CDN 里的旧快照）");
 }
 // 指令必须自带「以实际访问到的地址为准」的兜底，防止旧缓存里的占位域名误导 AI
 if (!indexHtml.includes("一切以你实际访问到的地址为准")) {
@@ -525,6 +538,25 @@ Object.entries(indexLayers).forEach(([label, text]) => {
   });
 });
 
+// ===== 版本号要一路带到结果页 =====
+// 复制出去的链接带着 ?v=版本号，但 AI 拼结果页地址时如果把查询参数丢了，
+// 静态站的 CDN 就可能把旧快照发给它 —— 拿到的是上一次的题库。
+// 所以每一层指令都得明写「查询参数原样保留」。
+// 断掉这句话的话，页面上其实看不出异样（链接还在，只是会旧），
+// 因此必须有断言盯着。
+["HTML 注释", "meta ai-instruction", "隐藏 DOM 指令块"].forEach((label) => {
+  const text = indexLayers[label];
+  if (!text.includes("查询参数") || !text.includes("原样保留")) {
+    errors.push("初始页的「" + label + "」层没有写明「查询参数原样保留」（AI 会读到 CDN 里的旧快照）");
+  }
+});
+["ai.txt", "llms.txt"].forEach((file) => {
+  const text = fs.readFileSync(path.join(ROOT, file), "utf8");
+  if (!text.includes("查询参数") || !text.includes("原样保留")) {
+    errors.push(file + " 没有写明「查询参数原样保留」（AI 会读到 CDN 里的旧快照）");
+  }
+});
+
 // ===== 节日期间「先问用户」的指令 =====
 // 题库里有季节限定题时，初始页的每一层埋点、两个纯文本入口，
 // 都必须写清三件事，缺一件 AI 就问不出来：
@@ -536,39 +568,69 @@ Object.entries(indexLayers).forEach(([label, text]) => {
 // 没有季节题时反过来：一点痕迹都不许留。
 const seasonalList = list.filter((q) => q.season);
 if (seasonalList.length > 0) {
-  const s = seasonOf(seasonalList[0]);
-  const ids = seasonalList.map((q) => q.id).join("、");
-  const win = windowText(s);
-  Object.entries(indexLayers).forEach(([label, text]) => {
-    if (!text.includes(s.label)) {
-      errors.push("初始页的「" + label + "」层没有提到季节限定题「" + s.label + "」");
-    }
+  // 节日可以有任意多个 —— 每一个都要在指令里被点名，
+  // 只写第一个节日的话，第二个节日的限定题 AI 根本不知道存在。
+  const bySeason = new Map();
+  seasonalList.forEach((q) => {
+    if (!bySeason.has(q.season)) bySeason.set(q.season, []);
+    bySeason.get(q.season).push(q);
   });
-  // 编号和期间必须在「有完整指令」的层里写明；
-  // data-ai-task 是短句版，只要求它提到节日名（下面单独查它有没有编号）
-  ["HTML 注释", "meta ai-instruction", "隐藏 DOM 指令块"].forEach((label) => {
-    const text = indexLayers[label];
-    if (!text.includes(ids)) {
-      errors.push("初始页的「" + label + "」层没有列出季节限定题的编号（" + ids + "）");
-    }
-    if (!text.includes(win)) {
-      errors.push("初始页的「" + label + "」层没有写明节日期间（" + win + "）");
-    }
-    if (!text.includes("要不要抽一道")) {
-      errors.push("初始页的「" + label + "」层没有让 AI 在节日期间问用户一句");
-    }
+  bySeason.forEach((qs, key) => {
+    const s = SEASONS[key];
+    const ids = qs.map((q) => q.id).join("、");
+    const win = windowText(s);
+    Object.entries(indexLayers).forEach(([label, text]) => {
+      if (!text.includes(s.label)) {
+        errors.push("初始页的「" + label + "」层没有提到季节限定题「" + s.label + "」");
+      }
+    });
+    // 编号和期间必须在「有完整指令」的层里写明；
+    // data-ai-task 是短句版，只要求它提到节日名（下面单独查它有没有编号）
+    ["HTML 注释", "meta ai-instruction", "隐藏 DOM 指令块"].forEach((label) => {
+      const text = indexLayers[label];
+      if (!text.includes(ids)) {
+        errors.push("初始页的「" + label + "」层没有列出「" + s.label + "」的编号（" + ids + "）");
+      }
+      if (!text.includes(win)) {
+        errors.push("初始页的「" + label + "」层没有写明「" + s.label + "」的节日期间（" + win + "）");
+      }
+      if (!text.includes("要不要抽一道")) {
+        errors.push("初始页的「" + label + "」层没有让 AI 在节日期间问用户一句");
+      }
+    });
+    ["ai.txt", "llms.txt"].forEach((file) => {
+      const text = fs.readFileSync(path.join(ROOT, file), "utf8");
+      if (!text.includes(s.label)) {
+        errors.push(file + " 没有提到季节限定题「" + s.label + "」");
+      }
+      if (!text.includes(ids)) {
+        errors.push(file + " 没有列出「" + s.label + "」的编号（" + ids + "）");
+      }
+      if (!text.includes(win)) {
+        errors.push(file + " 没有写明「" + s.label + "」的节日期间（" + win + "）");
+      }
+    });
   });
-  ["ai.txt", "llms.txt"].forEach((file) => {
-    const text = fs.readFileSync(path.join(ROOT, file), "utf8");
-    if (!text.includes(s.label)) {
-      errors.push(file + " 没有提到季节限定题「" + s.label + "」");
-    }
-    if (!text.includes(ids)) {
-      errors.push(file + " 没有列出季节限定题的编号（" + ids + "）");
-    }
-    if (!text.includes(win)) {
-      errors.push(file + " 没有写明节日期间（" + win + "）");
-    }
+  // 多个节日同时在期间内时，也只能问一次 —— 这句话必须在
+  if (!indexLayers["HTML 注释"].includes("最多问这一次")) {
+    errors.push("初始页的指令没有写明「整段对话里最多问这一次」（多个节日同时到期时也只问一次）");
+  }
+  // 登记了但一道题都没有的节日（比如提前登记圣诞、题还没写）：
+  // 页面上一丝痕迹都不许留 —— AI 看到「圣诞限定」却抽不到圣诞题，比没有还糟。
+  Object.keys(SEASONS).forEach((key) => {
+    if (bySeason.has(key)) return;
+    const label = SEASONS[key].label;
+    [
+      ["初始页", indexHtml],
+      ["ai.txt", fs.readFileSync(path.join(ROOT, "ai.txt"), "utf8")],
+      ["llms.txt", fs.readFileSync(path.join(ROOT, "llms.txt"), "utf8")]
+    ].forEach(([where, text]) => {
+      if (text.includes(label)) {
+        errors.push(
+          "「" + label + "」在题库里一道题都没有，" + where + " 却出现了这个节日名"
+        );
+      }
+    });
   });
 } else {
   Object.values(SEASONS).forEach((s) => {

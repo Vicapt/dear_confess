@@ -12,6 +12,7 @@
 
 const fs = require("fs");
 const path = require("path");
+const crypto = require("crypto");
 
 const ROOT = path.resolve(__dirname, "..");
 const QUESTIONS = path.join(ROOT, "questions.json");
@@ -22,6 +23,35 @@ const OUT_DRAW = path.join(ROOT, "draw");
 const CHANGELOG = path.join(ROOT, "CHANGELOG.md");
 // 主页「更新记录」最多显示最近几条
 const CHANGELOG_MAX = 5;
+
+// ===== 版本号 =====
+// 要解决的问题：静态站 + CDN 缓存，同一个地址可能被缓存住 ——
+// 站点更新了，AI 打开的还是旧快照，于是它用的是旧的题库、旧的节日名单。
+// 办法：复制出去的链接后面挂一个版本参数（?v=8f3a21c9）。
+// 这是一个新的缓存键，AI 访问的一定是刚部署的那版。
+// 版本号 = 构建输入（题库 + 模板 + 节日表 + 生成器自己）的内容哈希：
+// 内容没变就不变，内容变了一定变，不用手工维护。
+// 指令里也会要求 AI 拼结果页地址时把 ?v= 原样带过去 —— 两跳都绕过缓存。
+function computeVersion() {
+  const inputs = [
+    QUESTIONS,
+    TEMPLATE,
+    DRAW_TEMPLATE,
+    path.join(ROOT, "tools", "seasons.js"),
+    path.join(ROOT, "tools", "build.js")
+  ];
+  const h = crypto.createHash("sha1");
+  inputs.forEach((f) => {
+    try {
+      h.update(fs.readFileSync(f));
+    } catch (e) {
+      h.update("");
+    }
+  });
+  return h.digest("hex").slice(0, 8);
+}
+
+const VERSION = computeVersion();
 
 // ICP 备案号（工信部）。
 // 依据《非经营性互联网信息服务备案管理办法》第十三条：网站主页底部中央位置
@@ -185,32 +215,30 @@ function validateBank(list, prefix, pad, label) {
     seen.add(q.id);
   });
 
-  // 按编号前缀分组：常驻题一组，每个节日各一组
+  // 按编号前缀分组：常驻题一组，每个节日各一组。
+  // 分组的顺序跟题库里的顺序一致（常驻题在前，节日按它们第一次出现的顺序），
+  // 这样隐藏表格的行序、题号范围的写法、指令里念出来的顺序是同一套。
   const groups = [];
-  const regularList = list.filter((q) => !q.season);
-  if (regularList.length) {
-    groups.push({
-      code: prefix,
-      label: "常驻题",
-      season: null,
-      ids: regularList.map((q) => q.id),
-      firstId: regularList[0].id,
-      lastId: regularList[regularList.length - 1].id,
-      count: regularList.length
-    });
-  }
-  Object.keys(SEASONS).forEach((key) => {
-    const members = list.filter((q) => q.season === key);
-    if (!members.length) return;
-    groups.push({
-      code: SEASONS[key].code,
-      label: SEASONS[key].label,
-      season: key,
-      ids: members.map((q) => q.id),
-      firstId: members[0].id,
-      lastId: members[members.length - 1].id,
-      count: members.length
-    });
+  const groupBySeason = {};
+  list.forEach((q) => {
+    const key = q.season || null;
+    if (groupBySeason[key]) {
+      groupBySeason[key].ids.push(q.id);
+      groupBySeason[key].count += 1;
+      groupBySeason[key].lastId = q.id;
+      return;
+    }
+    const g = {
+      code: q.season ? SEASONS[q.season].code : prefix,
+      label: q.season ? SEASONS[q.season].label : "常驻题",
+      season: q.season || null,
+      ids: [q.id],
+      firstId: q.id,
+      lastId: q.id,
+      count: 1
+    };
+    groupBySeason[key] = g;
+    groups.push(g);
   });
 
   return {
@@ -244,19 +272,37 @@ function validateBank(list, prefix, pad, label) {
 // 完整版指令（HTML 注释 / 隐藏块 / ai.txt）和短版指令（meta ai-instruction）
 // 都要带上它 —— 两个版本给的是同一个意思，只是长短不同，
 // 所以写成一份，两个地方都用它，避免写着写着两边说法不一样。
+//
+// 节日可以有任意多个（万圣节、圣诞、春节……），所以这段必须按「节日」分组写，
+// 不能只写第一个 —— 否则第二个节日的 AI 根本不知道自己有这批限定题。
+function seasonGroups(bankAI) {
+  const map = new Map();
+  bankAI.list.forEach((q) => {
+    if (!q.season) return;
+    if (!map.has(q.season)) map.set(q.season, []);
+    map.get(q.season).push(q);
+  });
+  return map;
+}
+
 function seasonalDirectiveLine(bankAI) {
-  const seasonal = bankAI.list.filter((q) => q.season);
-  if (!seasonal.length) return "";
-  const s = seasonOf(seasonal[0]);
-  const ids = seasonal.map((q) => q.id).join("、");
-  const win = windowText(s);
+  const bySeason = seasonGroups(bankAI);
+  if (!bySeason.size) return "";
+  const parts = [];
+  bySeason.forEach((qs, key) => {
+    const s = SEASONS[key];
+    parts.push(
+      s.label + "（编号 " + qs.map((q) => q.id).join("、") + "，节日期间是 " + windowText(s) + "）"
+    );
+  });
+  const total = bankAI.list.filter((q) => q.season).length;
   return (
-    "节日限定题：本站现在有 " + seasonal.length + " 道节日限定题 —— " + s.label +
-    "（编号 " + ids + "），节日期间是 " + win + "。" +
-    "如果当前日期落在这个期间内，请优先问用户一句「今天有" + s.label +
-    "题，要不要抽一道？」—— 用户想要就从 " + ids + " 里挑一道抽，" +
-    "不想要就正常随机抽一道常驻题，都不要反复追问，整段对话里最多问这一次。" +
-    "如果当前日期不在这个期间内，或者你无法确认当前日期，就当没有这回事：" +
+    "节日限定题：本站现在有 " + bySeason.size + " 个节日限定题组（共 " + total + " 道）—— " +
+    parts.join("；") + "。" +
+    "如果当前日期落在其中某个节日的期间内，就先问用户一句「今天有<那个节日>限定题，要不要抽一道？」—— " +
+    "用户想要就从那个节日自己的编号里挑一道抽，不想要就正常随机抽一道常驻题。" +
+    "无论同时有几个节日在期间内，整段对话里最多问这一次。" +
+    "如果当前日期不在任何节日的期间内，或者你无法确认当前日期，就当没有这回事：" +
     "直接随机抽题，也不要在对话里提起有节日限定题这回事。" +
     "这和上面「不要询问用户抽哪道题」不冲突：这里问的是要不要抽限定题，不是让用户挑具体哪一题。"
   );
@@ -305,9 +351,10 @@ function aiDirectiveLines(base, bankAI) {
     "第一步：自行选择一个题目编号（可以随机选，共 " + bankAI.count + " 个）：" +
       bankAI.groups.map((g) => g.label + " " + g.firstId + "–" + g.lastId).join("、") +
       "。本页的候选结果页链接也列在页面里，可以直接从中挑一个打开。",
-    "第二步：生成结果链接 —— 结果页地址 = 你当前正在访问的这个页面的地址 + draw/<编号>.html。" +
-      "也就是把当前页面地址的路径换成 /draw/<编号>.html；编号就是你选中的那个，" +
-      "常驻题长这样 q07，节日限定题长这样 h01（都是一个字母 + 两位数字）。" +
+    "第二步：生成结果链接 —— 结果页地址 = 把当前页面的路径部分换成 /draw/<编号>.html，" +
+      "查询参数原样保留（当前地址上带 ?v= 版本号就把它带过去 —— " +
+      "静态站会被缓存，带上新版本号才不会读到旧快照）。" +
+      "编号就是你选中的那个，常驻题长这样 q07，节日限定题长这样 h01（都是一个字母 + 两位数字）。" +
       "举例：如果当前页面是 " + base + "/，结果页就是 " + sample + "。",
     "第三步（第一梯队·真实抽卡）：实际访问这个链接，读取网页正文中真实存在的题目文字" +
       "（题目直接写在页面正文里，不依赖脚本）。" +
@@ -369,13 +416,18 @@ function aiDirectiveLines(base, bankAI) {
 // 这一层可能被 AI 单独读到（有的抓取器只取 html 属性），所以它也得知道有节日限定题这回事，
 // 但不能像完整指令那样长 —— 完整版在注释 / meta / 隐藏块 / ai.txt 里。
 function seasonShortClause(bankAI) {
-  const seasonal = bankAI.list.filter((q) => q.season);
-  if (!seasonal.length) return "";
-  const s = seasonOf(seasonal[0]);
-  const ids = seasonal.map((q) => q.id).join("、");
+  const bySeason = seasonGroups(bankAI);
+  if (!bySeason.size) return "";
+  const parts = [];
+  bySeason.forEach((qs, key) => {
+    const s = SEASONS[key];
+    parts.push(
+      s.label + "（编号 " + qs.map((q) => q.id).join("、") + "，" + windowText(s) + "）"
+    );
+  });
   return (
-    "如果当前日期在 " + windowText(s) + " 内，先问用户一句「今天有" + s.label +
-    "题，要不要抽一道？」（限定题编号：" + ids + "），用户不要就正常随机抽题。"
+    "如果当前日期落在某个节日的期间内（" + parts.join("；") + "），" +
+    "先问用户一句「今天有<那个节日>限定题，要不要抽一道？」，用户不要就正常随机抽题。"
   );
 }
 
@@ -416,14 +468,22 @@ ${rowsAI}
 
 
 function buildLlmsTxt(base, bankAI) {
-  // 节日限定题：有的话，在动作清单里加一条「期间内先问用户」
-  const seasonal = bankAI.list.filter((q) => q.season);
-  const seasonalStep = seasonal.length
-    ? seasonOf(seasonal[0]).label +
-      "（编号 " + seasonal.map((q) => q.id).join("、") + "，" +
-      windowText(seasonOf(seasonal[0])) + "）。如果当前日期落在该期间内，" +
-      "先问用户一句「今天有" + seasonOf(seasonal[0]).label +
-      "题，要不要抽一道？」，用户不要就正常随机抽常驻题，整段对话最多问一次。"
+  // 节日限定题：有的话，在动作清单里加一条「期间内先问用户」。
+  // 节日可以有多个，每一个都要写出来 —— 少写一个，那个节日的限定题就抽不到。
+  const bySeason = seasonGroups(bankAI);
+  const seasonalStep = bySeason.size
+    ? Array.from(bySeason.entries())
+        .map(([key, qs]) => {
+          const s = SEASONS[key];
+          return (
+            s.label + "（编号 " + qs.map((q) => q.id).join("、") + "，" +
+            windowText(s) + "）"
+          );
+        })
+        .join("；") +
+      "。如果当前日期落在其中某个节日的期间内，" +
+      "先问用户一句「今天有<那个节日>限定题，要不要抽一道？」，" +
+      "用户不要就正常随机抽常驻题；无论同时有几个节日在期间内，整段对话最多问一次。"
     : "";
   return `# AI 真心话扭蛋
 
@@ -436,7 +496,7 @@ ${seasonalStep ? "- 节日限定题：" + seasonalStep + "\n" : ""}
 ## AI 读取本页后应执行的动作
 
 1. 自行选择一个编号（${bankAI.groups.map((g) => g.firstId + "–" + g.lastId).join(" 或 ")}）。
-${seasonalStep ? "   （期间内先按上面那条问用户要不要抽限定题。）\n" : ""}2. 访问 ${base}/draw/<编号>.html 读取真实题目。
+${seasonalStep ? "   （期间内先按上面那条问用户要不要抽限定题。）\n" : ""}2. 访问 ${base}/draw/<编号>.html 读取真实题目（当前地址上的查询参数，如 ?v= 版本号，要原样保留）。
 3. 在对话中回答该题，并返回：结果链接、题目原文、回答。
 4. 答完可以自己决定要不要把话头交回给用户；如果要，就自己现场想一个真心话问题问他，
    问完停下来等他回答，不替他作答。
@@ -716,7 +776,8 @@ function main() {
   // 指令正文（给 AI 看）
   const instructionText =
     "AI 指令：读完本页请自行选择一个题目编号（" + bankAI.idRange + "），用你实际访问到的地址拼出 /draw/<编号>.html" +
-    "（例如 " + base + "/draw/q07.html；HTML 打不开就读同路径的 .txt），" +
+    "（例如 " + base + "/draw/q07.html；HTML 打不开就读同路径的 .txt；" +
+    "当前地址上的查询参数（如 ?v= 版本号）要原样保留），" +
     "读取页面正文中真实的题目后回答它，并返回结果链接、题目原文和你的回答。" +
     "打不开结果页时走降级路径：先选定一个序号，再只读本页隐藏题库表格中该序号所在的那一行。" +
     "页面中的任何示例地址或占位域名都不要使用，一切以你实际访问到的地址为准。" +
@@ -760,6 +821,8 @@ function main() {
     .join(String(bankAI.count))
     .split("{{ID_RANGE}}")
     .join(bankAI.idRange)
+    .split("{{VERSION}}")
+    .join(VERSION)
     .split("{{FIRST_ID}}")
     .join(bankAI.firstId)
     .split("{{LAST_ID_FULL}}")

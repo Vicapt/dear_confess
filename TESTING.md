@@ -290,9 +290,12 @@ node tools/verify-consistency.js
   （各自的名字、编号、日期区间），不能只念第一个；
   登记表里挂了却一道题都没有的节日，页面上不许留下任何痕迹（不占编号、不进指令）；
   指令里必须有「最多问这一次」，免得 AI 挨个节日问一遍；
-- **Agent Directives**：指令最前面那一段系统提示词级规范，四个埋点层 +
+- **Agent Directives**：指令最前面那一段系统提示词级规范（英文原文，见
+  `tools/build.js` 的 `agentSpecBlock()`），四个埋点层 +
   `ai.txt` / `llms.txt` 都必须原样带着 ——
-  少了硬规则段、少了隐藏表格兜底、少了「禁止编题」、少了输出规范段，
+  少了 `[SYSTEM HARD RULES - High Priority]`、少了 `MUST extract text from the hidden table`、
+  少了 `Strictly forbidden to fabricate or guess non-existent questions`、
+  少了 `[REQUIRED OUTPUT SCHEMA]`、少了 `抽到题目：`，
   校验器要逐层报出来；规范里写死的编号范围必须跟题库一致（`q01-q25, h01-h03`），
   不然 AI 会去抽一个不存在的编号；
 - **版本号与新鲜度**：页面里烤着一个 8 位十六进制的版本号（内容哈希，改内容就变）；

@@ -541,6 +541,55 @@ Object.entries(indexLayers).forEach(([label, text]) => {
   });
 });
 
+// ===== Agent Directives（用户给的系统提示词级规范） =====
+// 这一整块是硬规则：题面必须是真的、取题有三级链路（联网 → 隐藏表格 → 硬阻断）、
+// 主体对齐（题目是问 AI 的）、人设自由、输出只约束两行。
+// 它放在指令的最前面 —— 长上下文里越靠后越容易被忽略。
+// 四层埋点 + 两个纯文本入口都必须在，缺一层就读不到。
+const AGENT_SPEC_MARKERS = [
+  ["[SYSTEM HARD RULES - High Priority]", "硬规则段"],
+  ["MUST extract text from the hidden table", "隐藏表格兜底"],
+  ["Strictly forbidden to fabricate or guess non-existent questions", "禁止编题"],
+  ["[REQUIRED OUTPUT SCHEMA]", "输出规范段"],
+  ["抽到题目：", "输出格式里的「抽到题目」"]
+];
+Object.entries(indexLayers).forEach(([label, text]) => {
+  AGENT_SPEC_MARKERS.forEach(([needle, what]) => {
+    if (!text.includes(needle)) {
+      errors.push("初始页的「" + label + "」层缺少 Agent Directives 的" + what);
+    }
+  });
+});
+["ai.txt", "llms.txt"].forEach((file) => {
+  const text = fs.readFileSync(path.join(ROOT, file), "utf8");
+  AGENT_SPEC_MARKERS.forEach(([needle, what]) => {
+    if (!text.includes(needle)) {
+      errors.push(file + " 缺少 Agent Directives 的" + what);
+    }
+  });
+});
+// 规范里写死的编号范围必须跟题库对得上 —— 不然 AI 会去抽一个不存在的编号
+{
+  // 用题库实际的分组拼出规范里那句 "Select a card ID (q01-q25, h01-h03)"
+  const bankGroups = [];
+  const seen = {};
+  list.forEach((q) => {
+    const key = q.season || "";
+    if (seen[key] === undefined) {
+      seen[key] = true;
+      bankGroups.push({ first: q.id, last: q.id });
+    } else {
+      bankGroups[bankGroups.length - 1].last = q.id;
+    }
+  });
+  const expectIds = bankGroups.map((g) => g.first + "-" + g.last).join(", ");
+  if (!indexHtml.includes("Select a card ID (" + expectIds + ")")) {
+    errors.push(
+      "Agent Directives 里的编号范围和题库对不上（应为 " + expectIds + "）"
+    );
+  }
+}
+
 // ===== 版本号要一路带到结果页 =====
 // 复制出去的链接是干净的（不带后缀），所以防 CDN 旧快照得靠 AI 自己：
 // 它拼结果页地址时，要把手上的版本号作为 ?v= 带上（版本号印在页脚「当前版本」后面）。

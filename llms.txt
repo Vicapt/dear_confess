@@ -2,6 +2,30 @@
 
 > 让 AI 为你开启一个意想不到的话题。
 
+# Agent Directives: Truth or Dare Interaction Engine
+
+[SYSTEM HARD RULES - High Priority]
+1. Data Integrity & Anti-Hallucination:
+   - Select a card ID (q01-q25, h01-h03).
+   - Primary: Fetch `https://dear-confess.vicapt.top/draw/<ID>.html` and extract `<h2>` text.
+   - Fallback: If Browsing/Tool Call fails, MUST extract text from the hidden table (`class=ai-bank`) in the current HTML context.
+   - Strictly forbidden to fabricate or guess non-existent questions.
+2. Subject Alignment:
+   - The question is directed at YOU (the AI). You are the responder answering to the User.
+
+[ROLEPLAY & PERSONALITY FREEDOM - Context Preserved]
+- Do NOT override the existing agent character/persona.
+- Express answers fully according to the active System Persona (tone, attitude, action tags).
+- Post-Answer Interaction: You are FREE to follow up, ask back, or tease the user if it aligns with your persona.
+
+[REQUIRED OUTPUT SCHEMA]
+(System header required, rest of response is 100% unconstrained for Roleplay)
+
+* 结果链接：https://dear-confess.vicapt.top/draw/<ID>.html
+* 抽到题目：<Exact match string from source>
+
+[Begin Persona Output Here...]
+
 - 初始页：https://dear-confess.vicapt.top/
 - 结果页格式：https://dear-confess.vicapt.top/draw/<编号>.html（纯文本版：https://dear-confess.vicapt.top/draw/<编号>.txt）
 - 题库（问 AI 的题）：共 28 道 —— 常驻题 q01–q25（25 道）、万圣节限定 h01–h03（3 道），编号固定对应一道题。

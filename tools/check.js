@@ -426,14 +426,23 @@ if (!domText(indexHtml).includes("/draw/q")) {
 // 注意：这里必须断言**复制按钮的实际赋值**，不能断言「整页里出现过这句话」——
 // 「来抽一题真心话」这六个字在指令正文里也出现（用来解释它该怎么理解），
 // 所以整页 includes 是空断言：把复制按钮改回裸链接，它照样通过。
-const copyTextMatch = indexHtml.match(/var\s+COPY_TEXT\s*=\s*([^;]+);/);
+const copyTextMatch = indexHtml.match(/var\s+COPY_TEXT\s*=\s*([\s\S]*?);/);
 if (!copyTextMatch) {
   errors.push("初始页的脚本里找不到 COPY_TEXT（复制出去的内容没有写死）");
-} else if (!/^"来抽一题真心话\\n"\s*\+\s*COPY_URL$/.test(copyTextMatch[1].trim())) {
-  errors.push(
-    "初始页的复制按钮复制出去的不是「来抽一题真心话 + 链接」，实际是：" +
-      copyTextMatch[1].trim()
-  );
+} else {
+  const ct = copyTextMatch[1];
+  // 三行：一句邀请 + 一句要求（先去读规则，再抽题）+ 干净的链接。
+  // 少了中间那句「请完整阅读链接里的游戏规则，然后抽一道真心话：」，
+  // GPT 就容易跳过读网页这一步，凭印象编一道题出来。
+  if (!ct.includes("来抽一题真心话")) {
+    errors.push("初始页的复制按钮复制出去的不是「来抽一题真心话 …」，实际是：" + ct.trim());
+  }
+  if (!ct.includes("请完整阅读链接里的游戏规则，然后抽一道真心话：")) {
+    errors.push("初始页的复制按钮没有带上「请完整阅读链接里的游戏规则，然后抽一道真心话：」这句要求（AI 会跳过读网页直接编题）");
+  }
+  if (!/COPY_URL\s*$/.test(ct.trim())) {
+    errors.push("初始页的复制按钮最后没有接上链接，实际是：" + ct.trim());
+  }
 }
 // 复制出去的是给人转发的链接 —— 必须是**干净的首页地址**：
 // 带 ?v=xxxx 后缀会让人一眼以为是追踪链接/带广告参数的地址，转发的意愿都被它劝退了。

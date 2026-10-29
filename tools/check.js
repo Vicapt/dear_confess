@@ -435,9 +435,10 @@ if (!copyTextMatch) {
       copyTextMatch[1].trim()
   );
 }
-// 复制出去的链接必须带版本参数 ?v=xxxxxxxx ——
-// 静态站会被 CDN 缓存，不带新参数，AI 打开的可能还是旧快照（旧的题库、旧的节日名单）。
-// 版本号本身必须是写死的 8 位哈希，不能是运行时才算出来的东西。
+// 复制出去的是给人转发的链接 —— 必须是**干净的首页地址**：
+// 带 ?v=xxxx 后缀会让人一眼以为是追踪链接/带广告参数的地址，转发的意愿都被它劝退了。
+// 防 CDN 旧快照改由 AI 侧负责：页脚印着「当前版本」，指令要求它自己把版本号带上。
+// 版本号本身必须写死成 8 位哈希，不能是运行时才算出来的东西。
 const versionMatch = indexHtml.match(/var\s+VERSION\s*=\s*"([0-9a-f]{8})"/);
 if (!versionMatch) {
   errors.push('初始页的脚本里没有写死版本号（应为 var VERSION = "xxxxxxxx"）');
@@ -445,8 +446,10 @@ if (!versionMatch) {
 const copyUrlMatch = indexHtml.match(/var\s+COPY_URL\s*=\s*([\s\S]*?);/);
 if (!copyUrlMatch) {
   errors.push("初始页的脚本里找不到 COPY_URL");
-} else if (!/v=" \+ VERSION|\?v=|&v=/.test(copyUrlMatch[1])) {
-  errors.push("初始页复制出去的链接没有带版本参数（AI 可能读到 CDN 里的旧快照）");
+} else if (/VERSION|\?v=|&v=|"/.test(copyUrlMatch[1])) {
+  errors.push(
+    "初始页复制出去的链接不干净（应直接是站点地址，不带 ?v= 后缀）：" + copyUrlMatch[1].trim()
+  );
 }
 // 指令必须自带「以实际访问到的地址为准」的兜底，防止旧缓存里的占位域名误导 AI
 if (!indexHtml.includes("一切以你实际访问到的地址为准")) {
@@ -539,21 +542,26 @@ Object.entries(indexLayers).forEach(([label, text]) => {
 });
 
 // ===== 版本号要一路带到结果页 =====
-// 复制出去的链接带着 ?v=版本号，但 AI 拼结果页地址时如果把查询参数丢了，
-// 静态站的 CDN 就可能把旧快照发给它 —— 拿到的是上一次的题库。
-// 所以每一层指令都得明写「查询参数原样保留」。
-// 断掉这句话的话，页面上其实看不出异样（链接还在，只是会旧），
-// 因此必须有断言盯着。
+// 复制出去的链接是干净的（不带后缀），所以防 CDN 旧快照得靠 AI 自己：
+// 它拼结果页地址时，要把手上的版本号作为 ?v= 带上（版本号印在页脚「当前版本」后面）。
+// 每一层指令都必须说清两件事：带查询参数、版本号从页脚的「当前版本」取。
+// 少了任何一样，AI 拿到的就可能是上一次的题库，而页面上看不出异样。
 ["HTML 注释", "meta ai-instruction", "隐藏 DOM 指令块"].forEach((label) => {
   const text = indexLayers[label];
   if (!text.includes("查询参数") || !text.includes("原样保留")) {
     errors.push("初始页的「" + label + "」层没有写明「查询参数原样保留」（AI 会读到 CDN 里的旧快照）");
+  }
+  if (!text.includes("当前版本")) {
+    errors.push("初始页的「" + label + "」层没有告诉 AI 去哪拿版本号（页脚「当前版本」）");
   }
 });
 ["ai.txt", "llms.txt"].forEach((file) => {
   const text = fs.readFileSync(path.join(ROOT, file), "utf8");
   if (!text.includes("查询参数") || !text.includes("原样保留")) {
     errors.push(file + " 没有写明「查询参数原样保留」（AI 会读到 CDN 里的旧快照）");
+  }
+  if (!text.includes("当前版本")) {
+    errors.push(file + " 没有告诉 AI 去哪拿版本号（页脚「当前版本」）");
   }
 });
 

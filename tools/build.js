@@ -838,8 +838,8 @@ function main() {
   // 绝对不能把指令写进 description / og:description：QQ、微信等会把它们当摘要直接显示出来。
   // 写法要求：第二人称、有钩子、说清玩法，不写编号和路径（那些在页面正文里）。
   const summaryText = escapeHtml(
-    "把链接丢给 AI，它自己抽一道真心话再当面回答你。" +
-      "有些话不好意思对人讲，就对它讲 —— 它不会嫌你烦。"
+    "把链接丢给 AI，TA 自己会抽一道真心话再当面回答你。" +
+      "有些话不好意思对人讲，就对 TA 讲 —— TA 不会嫌你烦。"
   );
 
   const html = template

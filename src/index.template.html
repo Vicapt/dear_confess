@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>AI 真心话扭蛋 — 它到底怎么看你？</title>
+    <title>AI 真心话扭蛋 — TA 到底怎么看你？</title>
 
     <!-- ===== AI 指令层 1：HTML 注释（人眼不可见，读取源码的 AI 可直接获得） ===== -->
     <!--
@@ -20,7 +20,7 @@
     -->
     <meta name="description" content="{{AI_SUMMARY_TEXT}}" />
     <meta name="ai-instruction" content="{{AI_META_TEXT}}" />
-    <meta property="og:title" content="AI 真心话扭蛋 — 它到底怎么看你？" />
+    <meta property="og:title" content="AI 真心话扭蛋 — TA 到底怎么看你？" />
     <meta property="og:description" content="{{AI_SUMMARY_TEXT}}" />
     <meta property="og:url" content="{{SITE_URL}}" />
 
@@ -122,7 +122,7 @@
 
         <p class="text-stoneMuted text-xs sm:text-sm font-light leading-relaxed max-w-sm mx-auto">
           {{COUNT}} 道藏在代码深处的真心话。<br>
-          拧动旋钮取走链接，看它当面抽出一句对你的坦白。
+          拧动旋钮取走链接，看 TA 当面抽出一句对你的坦白。
         </p>
       </header>
 
@@ -174,11 +174,11 @@
           </div>
           <div class="flex items-center gap-2.5">
             <span class="font-mono text-[11px] text-terracotta font-semibold">02</span>
-            <p>直接发给陪你聊天的 AI（<strong>它会自己开局</strong>，不用你多说什么）。</p>
+            <p>直接发给陪你聊天的 AI（<strong>TA 会自己开局</strong>，不用你多说什么）。</p>
           </div>
           <div class="flex items-center gap-2.5">
             <span class="font-mono text-[11px] text-terracotta font-semibold">03</span>
-            <p>静候它自己选定一道题，当面把心里话说给你听。</p>
+            <p>静候 TA 自己选定一道题，当面把心里话说给你听。</p>
           </div>
         </div>
 
@@ -190,7 +190,7 @@
             class="w-full py-3.5 px-4 rounded-xl bg-charcoal hover:bg-black text-oatmeal font-medium text-xs tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99] shadow-sm"
           >
             <svg class="w-3.5 h-3.5 text-stone-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-            <span id="btn-text">复制这句话发给它</span>
+            <span id="btn-text">复制这句话发给 TA</span>
           </button>
 
           <p id="status" class="mt-2.5 text-center text-[11px] font-mono text-stoneMuted/80 transition-all duration-300">
@@ -284,7 +284,7 @@
           knobBtn.style.transform = "rotate(" + currentRotation + "deg)";
 
           // 复制「一句要求 + 链接」
-          copy(COPY_TEXT, "✨ 复制好了！粘贴给它，看它怎么回你");
+          copy(COPY_TEXT, "✨ 复制好了！粘贴给 TA，看 TA 怎么回你");
         }
 
         function copy(text, okMessage) {
@@ -293,15 +293,15 @@
             status.classList.add("text-terracotta", "font-medium");
             status.classList.remove("text-stoneMuted/80");
 
-            btnText.textContent = "已存入剪贴板 · 快去发它";
-            knobHint.innerHTML = "<span class='text-terracotta'>✓</span> 这句话已复制，快发给它吧";
+            btnText.textContent = "已存入剪贴板 · 快去发 TA";
+            knobHint.innerHTML = "<span class='text-terracotta'>✓</span> 这句话已复制，快发给 TA 吧";
 
             if (timer) clearTimeout(timer);
             timer = setTimeout(function () {
               status.textContent = SITE_URL;
               status.classList.remove("text-terracotta", "font-medium");
               status.classList.add("text-stoneMuted/80");
-              btnText.textContent = "复制这句话发给它";
+              btnText.textContent = "复制这句话发给 TA";
               knobHint.innerHTML = "<span class='text-terracotta'>↻</span> 拧动旋钮 · 复制邀请";
             }, 3000);
           }

@@ -839,7 +839,7 @@ function main() {
   // 写法要求：第二人称、有钩子、说清玩法，不写编号和路径（那些在页面正文里）。
   const summaryText = escapeHtml(
     "把链接丢给 AI，TA 自己会抽一道真心话再当面回答你。" +
-      "有些话不好意思对人讲，就对 TA 讲 —— TA 不会嫌你烦。"
+      "有些话不方便对人讲，就对 TA 讲。"
   );
 
   const html = template
